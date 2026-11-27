@@ -1,0 +1,19 @@
+# Secrets & local environment
+.env
+.env.*
+.dev.vars
+*.pem
+*.key
+
+# Personal portfolio backups (NEVER commit real user holdings!)
+*my_portfolio*
+*.local.json
+*.enc.json
+personal_assets.*
+
+# Build / Cloudflare / Node / Python artifacts
+.wrangler/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

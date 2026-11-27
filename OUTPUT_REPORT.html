@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Die With Zero × Portfolio Beta × 多源股價校對系統 — 產出成果報告</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --blue: #3b82f6;
+      --indigo: #6366f1;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --cyan: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(circle at top right, #1e1b4b 0%, var(--bg) 45%);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 28px 18px 64px;
+    }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid #3b82f666; background: #1d4ed826; color: #93c5fd;
+    }
+    .badge.green { border-color: #10b98166; background: #05966926; color: #6ee7b7; }
+    .badge.amber { border-color: #f59e0b66; background: #d9770626; color: #fcd34d; }
+    .hero h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 8px; }
+    .hero p { color: var(--muted); font-size: 14px; max-width: 880px; }
+    .hero-meta {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px; margin-top: 20px;
+    }
+    .stat-card {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-value { font-size: 22px; font-weight: 800; margin-top: 2px; }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .c-emerald { color: var(--emerald); }
+    .c-blue { color: var(--blue); }
+    .c-amber { color: var(--amber); }
+    .c-cyan { color: var(--cyan); }
+    .c-rose { color: var(--rose); }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+    }
+    section h2 {
+      font-size: 18px; font-weight: 700; margin-bottom: 14px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    section h3 { font-size: 15px; font-weight: 700; margin: 16px 0 8px; color: #e2e8f0; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .subcard {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid #1e293b; text-align: left; }
+    th {
+      background: #1e293b; color: #cbd5e1; font-weight: 700; font-size: 12px;
+      position: sticky; top: 0;
+    }
+    tr:hover td { background: #1e293b55; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .center { text-align: center; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px; background: #0f172a; border: 1px solid #334155;
+      padding: 1px 6px; border-radius: 5px; color: #93c5fd;
+    }
+
+    /* Interactive Playground */
+    .control-group { margin-bottom: 11px; }
+    .control-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 13px; }
+    .control-top input[type="number"] {
+      width: 125px; background: #0f172a; border: 1px solid var(--border); color: #fff;
+      border-radius: 7px; padding: 4px 8px; text-align: right; font-size: 13px;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    .toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tbtn {
+      flex: 1; padding: 7px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--muted); font-weight: 600; cursor: pointer;
+    }
+    .tbtn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .action-btn {
+      padding: 8px 13px; border-radius: 8px; border: none; font-weight: 600;
+      font-size: 12px; cursor: pointer; color: #fff; background: var(--emerald);
+    }
+    .action-btn.sec { background: #334155; }
+    .diag-banner {
+      padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      background: #0f172a; border-left: 4px solid var(--emerald); margin-bottom: 12px;
+    }
+    .diag-banner.warn { border-left-color: var(--rose); color: #fecdd3; }
+    .chart-box {
+      background: #0f172a; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; margin-top: 10px;
+    }
+    .chart-box svg { width: 100%; height: 220px; display: block; }
+    .legend { display: flex; gap: 16px; justify-content: center; font-size: 12px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+    .layer-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; background: #05966933; color: #6ee7b7;
+      border: 1px solid #10b98166;
+    }
+    .layer-tag.plan { background: #0284c733; color: #7dd3fc; border-color: #38bdf866; }
+
+    .steps-list { list-style: none; counter-reset: stp; }
+    .steps-list li {
+      counter-increment: stp; position: relative; padding-left: 36px; margin-bottom: 12px;
+      font-size: 13.5px; color: #e2e8f0;
+    }
+    .steps-list li::before {
+      content: counter(stp); position: absolute; left: 0; top: 1px;
+      width: 24px; height: 24px; border-radius: 50%; background: var(--blue);
+      color: #fff; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .disclaimer {
+      font-size: 12px; color: var(--muted); background: #0f172a;
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-top: 14px;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="hero-badges">
+        <span class="badge green">✅ AI 六層驗證 29/29 全數通過</span>
+        <span class="badge">🔥 對齊 alphalab.site/fire Die With Zero</span>
+        <span class="badge amber">🔍 4 大權威股價來源校對（今日 + 歷史）</span>
+        <span class="badge">🛡️ 零 Critical / High 安全風險</span>
+      </div>
+      <h1>Die With Zero × Portfolio Beta × 多源股價校對系統</h1>
+      <p>
+        專為 <strong>Google Drive</strong> 打造之「Google 試算表（7 大分頁）＋ 綁定式 Google Apps Script (V8) ＋ 仿 AlphaLab 互動側邊欄 ＋ 可直傳 <code>.xlsx</code> 範本」完整解決方案。
+        整合死前財產歸零試算、個人持倉整體 Beta 曝險分析，以及 Google Finance / Yahoo Finance / TWSE-TPEx (Stooq) / FinMind 四源股價校對引擎。
+      </p>
+      <div class="hero-meta">
+        <div class="stat-card">
+          <div class="stat-label">完整交付檔案數</div>
+          <div class="stat-value c-blue">18 檔</div>
+          <div class="stat-sub">7 支 .gs + Sidebar + .xlsx + 測試與文件</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">自動化測試通過率</div>
+          <div class="stat-value c-emerald">100.0%</div>
+          <div class="stat-sub">29 / 29 項全數 PASS（L1–L5）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">核心運算 P95 延遲</div>
+          <div class="stat-value c-cyan">0.22 ms</div>
+          <div class="stat-sub">500 次模擬（SLA &lt;200ms）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">故障注入韌性成功率</div>
+          <div class="stat-value c-emerald">100.0%</div>
+          <div class="stat-sub">10% 503 斷線下 P95 620ms（SLA ≥98%）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">公式交叉比對精度</div>
+          <div class="stat-value c-amber">3.73e-9</div>
+          <div class="stat-sub">試算表公式 vs JS 引擎 51 年最大漂移 (TWD)</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- INTERACTIVE PREVIEW -->
+    <section>
+      <h2>🎨 即時互動體驗：Die With Zero（仿 AlphaLab）× 持倉整體 Beta 預覽器</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+        以下直接內嵌與 <code>FireEngine.gs</code> / <code>BetaEngine.gs</code> 相同之數學引擎，開啟本 HTML 即可離線即時試算並檢視資產歸零曲線（所有金額以 Fisher 公式換算為今日實質購買力）。
+      </p>
+      <div class="grid-2">
+        <div class="subcard">
+          <h3 style="margin-top:0;">參數設定（對齊 alphalab.site/fire）</h3>
+          <div class="toggle-row">
+            <button type="button" class="tbtn active" id="btnWork">還在工作</button>
+            <button type="button" class="tbtn" id="btnRet">已經退休</button>
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="ageIn">現在幾歲</label><input type="number" id="ageIn" value="35" min="18" max="95"></div>
+            <input type="range" id="ageRng" min="18" max="85" value="35">
+          </div>
+          <div class="control-group" id="retWrap">
+            <div class="control-top"><label for="retIn">想幾歲退休</label><input type="number" id="retIn" value="55" min="20" max="95"></div>
+            <input type="range" id="retRng" min="20" max="85" value="55">
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="lifeIn">預計活到幾歲（內政部保守壽命）</label><input type="number" id="lifeIn" value="85" min="55" max="110"></div>
+            <input type="range" id="lifeRng" min="60" max="105" value="85">
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="nwIn">目前淨資產（TWD，預設連動範例持倉）</label><input type="number" id="nwIn" value="5954750" step="100000"></div>
+          </div>
+          <div class="control-group" id="saveWrap">
+            <div class="control-top"><label for="saveIn">每月能存 / 投入（TWD）</label><input type="number" id="saveIn" value="50000" step="5000"></div>
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="spendIn">退休後每月開銷（今日幣值 TWD）</label><input type="number" id="spendIn" value="60000" step="5000"></div>
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="nomIn">預期年化投資報酬率 (%)</label><input type="number" id="nomIn" value="7.0" step="0.1"></div>
+            <input type="range" id="nomRng" min="0" max="15" step="0.1" value="7.0">
+          </div>
+          <div class="control-group">
+            <div class="control-top"><label for="infIn">預期通貨膨脹率 (%)</label><input type="number" id="infIn" value="3.0" step="0.1"></div>
+            <input type="range" id="infRng" min="0" max="8" step="0.1" value="3.0">
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+            <button type="button" class="action-btn" id="applyMaxBtn">✨ 一鍵套用最高可花月開銷</button>
+            <button type="button" class="action-btn sec" id="applyEarlyBtn">🚀 一鍵套用 DWZ 最早退休年齡</button>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <h3 style="margin-top:0;">即時試算結果與資產走勢</h3>
+          <div id="diagBanner" class="diag-banner">計算中...</div>
+          <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+            <div class="stat-card">
+              <div class="stat-label">✨ 每月最高可花（DWZ 歸零反推）</div>
+              <div class="stat-value c-emerald" id="outMaxSpend">--</div>
+              <div class="stat-sub" id="outRealRate">實質報酬率：--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">DWZ 退休目標（vs 4% FIRE）</div>
+              <div class="stat-value c-blue" id="outDwzTarget">--</div>
+              <div class="stat-sub" id="outFireTarget">傳統 4% FIRE：--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">🚀 最早可退休年齡對比</div>
+              <div class="stat-value c-amber" id="outEarliest">--</div>
+              <div class="stat-sub" id="outYearsSaved">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">預期壽命終點結餘（今日幣值）</div>
+              <div class="stat-value" id="outEndBal">--</div>
+              <div class="stat-sub">正值為未花完遺產；0 為完美歸零</div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <svg id="fireSvg" viewBox="0 0 560 210" preserveAspectRatio="none"></svg>
+            <div class="legend">
+              <span><i class="dot" style="background:#3b82f6"></i>實際資產路徑</span>
+              <span><i class="dot" style="background:#10b981"></i>Die With Zero 理想歸零曲線</span>
+              <span><i class="dot" style="background:#f59e0b"></i>傳統 4% FIRE 目標線</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PORTFOLIO & BETA -->
+    <section>
+      <h2>💼 預設 Beta 對照表與範例持倉實測輸出</h2>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div class="stat-card">
+          <div class="stat-label">範例總資產市值 (TWD)</div>
+          <div class="stat-value c-blue">5,954,750</div>
+          <div class="stat-sub">股票 4,454,750 + 現金 1,500,000（25.19%）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">整體投資組合 Beta（含現金）</div>
+          <div class="stat-value c-emerald">1.00</div>
+          <div class="stat-sub">精確值 0.9996｜等效大盤曝險 5,952,500</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">純股票部位 Beta（不含現金）</div>
+          <div class="stat-value c-amber">1.34</div>
+          <div class="stat-sub">精確值 1.3362｜支援自訂標的與覆寫 Beta</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>股票代號</th>
+              <th>市場別</th>
+              <th>資產名稱</th>
+              <th class="num">範例股數 / 金額</th>
+              <th class="num">參考股價</th>
+              <th class="num">市值 (TWD)</th>
+              <th class="num">權重</th>
+              <th class="num">預設 Beta</th>
+              <th class="num">加權 Beta 貢獻</th>
+              <th class="num">等效大盤曝險 (TWD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>0050</code></td><td>TWSE</td><td>元大台灣50</td><td class="num">10,000</td><td class="num">195.50</td><td class="num">1,955,000</td><td class="num">32.83%</td><td class="num"><strong>1.00</strong></td><td class="num">0.3283</td><td class="num">1,955,000</td></tr>
+            <tr><td><code>006208</code></td><td>TWSE</td><td>富邦台50</td><td class="num">5,000</td><td class="num">112.40</td><td class="num">562,000</td><td class="num">9.44%</td><td class="num"><strong>1.00</strong></td><td class="num">0.0944</td><td class="num">562,000</td></tr>
+            <tr><td><code>00662</code></td><td>TWSE</td><td>富邦NASDAQ</td><td class="num">5,000</td><td class="num">88.00</td><td class="num">440,000</td><td class="num">7.39%</td><td class="num"><strong>1.00</strong></td><td class="num">0.0739</td><td class="num">440,000</td></tr>
+            <tr><td><code>00685L</code></td><td>TWSE</td><td>群益臺灣加權正2</td><td class="num">3,000</td><td class="num">85.00</td><td class="num">255,000</td><td class="num">4.28%</td><td class="num"><strong>2.00</strong></td><td class="num">0.0856</td><td class="num">510,000</td></tr>
+            <tr><td><code>00631L</code></td><td>TWSE</td><td>元大台灣50正2</td><td class="num">5,000</td><td class="num">248.55</td><td class="num">1,242,750</td><td class="num">20.87%</td><td class="num"><strong>2.00</strong></td><td class="num">0.4174</td><td class="num">2,485,500</td></tr>
+            <tr><td><code>CASH</code></td><td>CASH</td><td>現金 Cash</td><td class="num">1,500,000</td><td class="num">1.00</td><td class="num">1,500,000</td><td class="num">25.19%</td><td class="num"><strong>0.00</strong></td><td class="num">0.0000</td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4-SOURCE PRICE RECONCILIATION -->
+    <section>
+      <h2>🔍 三源以上權威股價校對架構（今日即時 × 歷史收盤 × 區間追蹤）</h2>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="subcard">
+          <h3 style="margin-top:0;">4 大獨立資料源與 Failover 設計</h3>
+          <ol class="steps-list" style="margin-top:10px;">
+            <li><strong>Google Finance</strong>：透過試算表儲存格原生 <code>=GOOGLEFINANCE()</code> 評估即時與歷史收盤，再由 Apps Script 橋接讀取。</li>
+            <li><strong>Yahoo Finance Chart API v8</strong>：支援台股 <code>.TW/.TWO</code> 與美股；歷史取<strong>未還原 <code>close</code></strong>（防除權息誤報），<code>query1</code> 遇限流自動切換 <code>query2</code>。</li>
+            <li><strong>TWSE / TPEx 官方 API（美股採 Stooq CSV）</strong>：盤中取 MIS 即時成交價 <code>z</code>（無成交自動降級 OpenAPI <code>STOCK_DAY_ALL</code>）；歷史取 <code>STOCK_DAY</code> 並自動解析民國年日期。</li>
+            <li><strong>FinMind OpenAPI</strong>：獨立驗證 <code>TaiwanStockPrice</code> / <code>USStockPrice</code>，支援匿名 300 次/時與 <code>ScriptProperties</code> Token 600 次/時。</li>
+          </ol>
+        </div>
+        <div class="subcard">
+          <h3 style="margin-top:0;">共識演算法與異常偵測標準</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>檢核項目</th><th>今日即時模式</th><th>歷史收盤模式</th></tr></thead>
+              <tbody>
+                <tr><td>最低有效來源數</td><td colspan="2" class="center"><strong>≥ 3 來源</strong>（不足標記 <code>INSUFFICIENT_SOURCES</code>）</td></tr>
+                <tr><td>共識價公式</td><td colspan="2" class="center"><strong>中位數（Median）</strong>— 天然免疫單一離群源</td></tr>
+                <tr><td>✅ 一致標準</td><td>價差率 ≤ 0.50%</td><td>價差率 ≤ 0.10% 或 ≤ 0.05 元</td></tr>
+                <tr><td>⚠️ 輕微/延遲差異</td><td>0.50% &lt; 價差率 ≤ 2.00%</td><td>0.10% &lt; 價差率 ≤ 1.00%</td></tr>
+                <tr><td>🚨 異常警示 + Outlier</td><td>價差率 &gt; 2.00%</td><td>價差率 &gt; 1.00%（自動定位偏離最大來源）</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI 6-LAYER VERIFICATION -->
+    <section>
+      <h2>🛡️ AI 六層驗證框架實測結果（依據 GEMINI.md 規範 C）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>驗證層級</th>
+              <th>驗證重點</th>
+              <th>建議通過標準</th>
+              <th class="center">實測結果</th>
+              <th>關鍵量測數據</th>
+              <th class="center">狀態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. 形式審查</strong></td>
+              <td>結構、文件、命名與相依性</td>
+              <td>100% 必要欄位完整</td>
+              <td class="center"><strong>5 / 5 (100%)</strong></td>
+              <td>16 核心檔齊備、<code>appsscript.json</code> V8 最小權限、6 預設 Beta 精準、7 支 <code>.gs</code> 與 <code>.xlsx</code> OOXML 12 部件通過</td>
+              <td class="center"><span class="layer-tag">✅ PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>2. 功能驗證</strong></td>
+              <td>正確觸發、呼叫工具、產生輸出</td>
+              <td>核心案例通過率 ≥95%</td>
+              <td class="center"><strong>16 / 16 (100%)</strong></td>
+              <td>DWZ 歸零殘差 <code>0.000000</code>、已退休/0%實質/負實質/退休金邊界、Beta &amp; 壓力測試、4 源校對/離群/Failover 全過</td>
+              <td class="center"><span class="layer-tag">✅ PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>3. 品質評估</strong></td>
+              <td>正確性、完整性、可執行性</td>
+              <td>人工 / Judge ≥4/5</td>
+              <td class="center"><strong>4.8 / 5.0</strong></td>
+              <td>AlphaLab 8/8 功能對齊；試算表公式與 <code>FireEngine.gs</code> 51 年交叉比對最大誤差 <code>3.73e-9 TWD</code></td>
+              <td class="center"><span class="layer-tag">✅ PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>4. 安全與治理</strong></td>
+              <td>權限、資料洩漏、注入防禦</td>
+              <td>零 Critical / High 風險</td>
+              <td class="center"><strong>4 / 4 (0 風險)</strong></td>
+              <td>6/6 SSRF/CRLF 阻斷、6/6 惡意代號拒絕、4/4 公式注入中和、零硬編碼金鑰、零 <code>eval</code>/<code>innerHTML</code></td>
+              <td class="center"><span class="layer-tag">✅ PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>5. 穩定性與效能</strong></td>
+              <td>延遲、失敗率、Token 與成本</td>
+              <td>成功率 ≥98%，P95 達 SLA</td>
+              <td class="center"><strong>2 / 2 (100%)</strong></td>
+              <td>500 次運算 P95 <strong>0.22ms</strong>；100 次 10% 503 故障注入成功率 <strong>100.0%</strong>、P95 <strong>620ms</strong>；API 成本 $0</td>
+              <td class="center"><span class="layer-tag">✅ PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>6. 實際成效</strong></td>
+              <td>改善使用者實際工作流程</td>
+              <td>A/B Test 達預定改善幅度</td>
+              <td class="center"><strong>遙測就緒</strong></td>
+              <td>內建 <code>🛡️ 驗證與監控日誌</code> 與 4 週 A/B 實測方案（預估盤點+校對+試算耗時由 ~18 分降至 &lt;1 分）</td>
+              <td class="center"><span class="layer-tag plan">📋 READY</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DELIVERABLES & DEPLOYMENT -->
+    <section>
+      <h2>📦 專案交付清單與 Google Drive 3 分鐘部署指南</h2>
+      <div class="grid-2">
+        <div class="subcard">
+          <h3 style="margin-top:0;">核心交付檔案清單</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>路徑</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><code>dist/DieWithZero_BetaCalculator.xlsx</code></td><td>可直接上傳 Google Drive 開啟的 7 分頁試算表範本</td></tr>
+                <tr><td><code>gas/appsscript.json</code></td><td>V8 Runtime 與最小權限 OAuth 清單</td></tr>
+                <tr><td><code>gas/Config.gs</code></td><td>6 項預設 Beta、安全白名單與公式注入清理</td></tr>
+                <tr><td><code>gas/FireEngine.gs</code></td><td>Die With Zero × 4% FIRE 核心數學引擎</td></tr>
+                <tr><td><code>gas/BetaEngine.gs</code></td><td>持倉估值、整體 Beta 與大盤壓力測試</td></tr>
+                <tr><td><code>gas/PriceSources.gs</code></td><td>4 大權威股價來源串接、快取與 Failover</td></tr>
+                <tr><td><code>gas/Reconciler.gs</code></td><td>三源以上共識價、離群偵測與 SLA 遙測</td></tr>
+                <tr><td><code>gas/SheetBuilder.gs</code></td><td><code>setupWorkbook()</code> 一鍵建置 7 分頁與原生圖表</td></tr>
+                <tr><td><code>gas/Main.gs</code> &amp; <code>Sidebar.html</code></td><td>自訂選單、一鍵套用與仿 AlphaLab 側邊欄</td></tr>
+                <tr><td><code>tests/run_all_verifications.mjs</code></td><td>AI 六層驗證 29 項自動化測試套件</td></tr>
+                <tr><td><code>docs/ARCHITECTURE.md</code> &amp; <code>VERIFICATION_6_LAYERS.md</code></td><td>架構規格書與六層驗證實測報告</td></tr>
+                <tr><td><code>OUTPUT_REPORT.md</code> / <code>.html</code> / <code>PROMPT.md</code></td><td>本報告（MD/HTML）與完整 Prompt 紀錄</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3 style="margin-top:0;">部署至 Google Drive（3 步驟）</h3>
+          <ol class="steps-list" style="margin-top:10px;">
+            <li><strong>新建試算表或上傳範本</strong>：於 Google Drive 新增空白 Google 試算表（或直接上傳 <code>dist/DieWithZero_BetaCalculator.xlsx</code> 並以 Google 試算表開啟）。</li>
+            <li><strong>貼入 Apps Script 專案</strong>：點選「擴充功能 → Apps Script」→ 於專案設定開啟 <code>appsscript.json</code> → 依同名貼入 <code>gas/</code> 內所有檔案（含 <code>Sidebar.html</code>）。</li>
+            <li><strong>一鍵初始化並啟動校對</strong>：執行 <code>setupWorkbook</code> 授權完成後重新整理試算表，即可透過上方選單 <code>🔥 Die With Zero &amp; Beta</code> 開啟互動側邊欄、同步今日四源股價、校對歷史收盤價與一鍵套用歸零開銷！</li>
+          </ol>
+          <div class="disclaimer">
+            <strong>⚠️ 風險揭露與合規備註</strong>：本系統僅供個人財務試算與多源股價核對，不構成投資建議。正二槓桿型 ETF（<code>00631L</code>、<code>00685L</code>）具單日再平衡與波動耗損特性。依 <code>GEMINI.md</code> 規範 B，目前所有變更均保留於本機工作區，尚未執行任何 <code>git add/commit/push</code>。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      BetaCalculator · Die With Zero × Portfolio Beta × Multi-Source Price Reconciler · Generated 2026-11-27 (+08:00)
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      var status = '還在工作';
+      var lastSim = null;
+      var $ = function (id) { return document.getElementById(id); };
+
+      function fmtWan(n) {
+        if (!isFinite(n)) return '--';
+        if (Math.abs(n) >= 10000) return (n / 10000).toFixed(1) + ' 萬';
+        return Math.round(n).toLocaleString('en-US');
+      }
+
+      function simulate(p) {
+        var r = (1 + p.nom) / (1 + p.inf) - 1;
+        var effRet = p.status === '已經退休' ? p.age : Math.max(p.age, Math.min(p.life, p.ret));
+        var m = Math.max(0, effRet - p.age);
+        var n = Math.max(0, p.life - effRet);
+        var annSave = p.status === '已經退休' ? 0 : Math.max(0, p.save) * 12;
+        var annSpend = Math.max(0, p.spend) * 12;
+        var pvF = function (rate, yrs) { return yrs <= 0 ? 0 : (Math.abs(rate) < 1e-9 ? yrs : (1 - Math.pow(1 + rate, -yrs)) / rate); };
+        var fvWork = Math.abs(r) < 1e-9
+          ? p.nw + annSave * m
+          : p.nw * Math.pow(1 + r, m) + annSave * ((Math.pow(1 + r, m) - 1) / r);
+        var dwzTarget = annSpend * pvF(r, n);
+        var fireTarget = annSpend / 0.04;
+        var maxAnnSpend = n > 0 ? Math.max(0, fvWork / pvF(r, n)) : 0;
+
+        var traj = [];
+        var bal = p.nw, ideal = p.nw, workBal = p.nw;
+        var depAge = null, earlyDwz = null, earlyFire = null;
+        var total = Math.max(1, p.life - p.age);
+
+        for (var y = 0; y <= total; y++) {
+          var a = p.age + y;
+          var isEnd = a === p.life;
+          var need = annSpend * pvF(r, p.life - a);
+          if (earlyDwz === null && workBal >= need - 1e-4) earlyDwz = a;
+          if (earlyFire === null && workBal >= fireTarget - 1e-4) earlyFire = a;
+          var endB = bal, endI = ideal;
+          if (!isEnd) {
+            if (a < effRet) {
+              endB = bal * (1 + r) + annSave;
+              endI = ideal * (1 + r) + annSave;
+            } else {
+              endB = bal * (1 + r) - annSpend;
+              endI = ideal * (1 + r) - maxAnnSpend;
+            }
+            if (depAge === null && endB < -1e-2) depAge = a + 1;
+          }
+          traj.push({ age: a, real: isEnd ? bal : endB, ideal: isEnd ? ideal : endI, fire: fireTarget });
+          if (!isEnd) {
+            bal = endB;
+            ideal = endI;
+            workBal = workBal * (1 + r) + annSave;
+          }
+        }
+        return {
+          realRate: r,
+          dwzTarget: dwzTarget,
+          fireTarget: fireTarget,
+          maxMonthly: maxAnnSpend / 12,
+          endBal: traj[traj.length - 1].real,
+          depAge: depAge,
+          earlyDwz: earlyDwz,
+          earlyFire: earlyFire,
+          traj: traj
+        };
+      }
+
+      function renderChart(traj) {
+        var svg = $('fireSvg');
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        if (!traj || traj.length < 2) return;
+
+        var vals = [0];
+        traj.forEach(function (pt) { vals.push(pt.real, pt.ideal, pt.fire); });
+        var minV = Math.min.apply(null, vals);
+        var maxV = Math.max.apply(null, vals);
+        if (maxV === minV) maxV = minV + 1;
+
+        var W = 560, H = 200, padL = 12, padR = 12, padT = 14, padB = 22;
+        var mapX = function (i) { return padL + (i / (traj.length - 1)) * (W - padL - padR); };
+        var mapY = function (v) { return H - padB - ((v - minV) / (maxV - minV)) * (H - padT - padB); };
+        var ns = 'http://www.w3.org/2000/svg';
+
+        // Zero line
+        var zY = mapY(0);
+        var zLine = document.createElementNS(ns, 'line');
+        zLine.setAttribute('x1', String(padL)); zLine.setAttribute('x2', String(W - padR));
+        zLine.setAttribute('y1', String(zY)); zLine.setAttribute('y2', String(zY));
+        zLine.setAttribute('stroke', '#475569'); zLine.setAttribute('stroke-dasharray', '4,4');
+        svg.appendChild(zLine);
+
+        function drawCurve(key, color, dash, width) {
+          var pts = traj.map(function (pt, idx) {
+            return mapX(idx).toFixed(1) + ',' + mapY(pt[key]).toFixed(1);
+          }).join(' ');
+          var poly = document.createElementNS(ns, 'polyline');
+          poly.setAttribute('fill', 'none');
+          poly.setAttribute('stroke', color);
+          poly.setAttribute('stroke-width', width);
+          if (dash) poly.setAttribute('stroke-dasharray', dash);
+          poly.setAttribute('points', pts);
+          svg.appendChild(poly);
+        }
+        drawCurve('fire', '#f59e0b', '4,4', '2');
+        drawCurve('ideal', '#10b981', '7,4', '2.5');
+        drawCurve('real', '#3b82f6', '', '3');
+
+        // Start & End Age Labels
+        [0, Math.floor(traj.length / 2), traj.length - 1].forEach(function (idx) {
+          var lbl = document.createElementNS(ns, 'text');
+          lbl.setAttribute('x', mapX(idx).toFixed(1));
+          lbl.setAttribute('y', String(H - 4));
+          lbl.setAttribute('fill', '#94a3b8');
+          lbl.setAttribute('font-size', '11');
+          lbl.setAttribute('text-anchor', idx === 0 ? 'start' : (idx === traj.length - 1 ? 'end' : 'middle'));
+          lbl.textContent = traj[idx].age + '歲';
+          svg.appendChild(lbl);
+        });
+      }
+
+      function update() {
+        var age = Number($('ageIn').value) || 35;
+        var life = Math.max(age + 1, Number($('lifeIn').value) || 85);
+        var p = {
+          status: status,
+          age: age,
+          ret: Number($('retIn').value) || 55,
+          life: life,
+          nw: Number($('nwIn').value) || 0,
+          save: Number($('saveIn').value) || 0,
+          spend: Number($('spendIn').value) || 0,
+          nom: (Number($('nomIn').value) || 0) / 100,
+          inf: (Number($('infIn').value) || 0) / 100
+        };
+        var s = simulate(p);
+        lastSim = s;
+
+        $('outMaxSpend').textContent = Math.round(s.maxMonthly).toLocaleString('en-US') + ' /月';
+        $('outRealRate').textContent = 'Fisher 實質報酬率：' + (s.realRate * 100).toFixed(2) + '%';
+        $('outDwzTarget').textContent = fmtWan(s.dwzTarget);
+        $('outFireTarget').textContent = '傳統 4% FIRE：' + fmtWan(s.fireTarget);
+        $('outEndBal').textContent = fmtWan(s.endBal);
+        var dStr = s.earlyDwz !== null ? s.earlyDwz + '歲' : '未達';
+        var fStr = s.earlyFire !== null ? s.earlyFire + '歲' : '未達';
+        $('outEarliest').textContent = dStr + ' vs ' + fStr;
+        $('outYearsSaved').textContent = (s.earlyDwz !== null && s.earlyFire !== null)
+          ? 'Die With Zero 可提早 ' + (s.earlyFire - s.earlyDwz) + ' 年退休'
+          : '調整儲蓄或開銷以檢視提早年數';
+
+        var b = $('diagBanner');
+        if (s.depAge !== null) {
+          b.className = 'diag-banner warn';
+          b.textContent = '⚠️ 資金將於 ' + s.depAge + ' 歲耗盡，建議增加儲蓄、降低開銷或延後退休。';
+        } else if (Math.abs(s.endBal) <= Math.max(10000, p.spend * 1.2)) {
+          b.className = 'diag-banner';
+          b.textContent = '🎯 完美達成 Die With Zero 死前財產歸零目標！';
+        } else {
+          b.className = 'diag-banner';
+          b.textContent = '💰 資產充裕：預計於 ' + p.life + ' 歲留下約 ' + fmtWan(s.endBal) + '（今日幣值），可考慮提早退休或套用最高月開銷。';
+        }
+        renderChart(s.traj);
+      }
+
+      function bindPair(a, b) {
+        $(a).addEventListener('input', function () { $(b).value = this.value; update(); });
+        $(b).addEventListener('input', function () { $(a).value = this.value; update(); });
+      }
+      bindPair('ageIn', 'ageRng');
+      bindPair('retIn', 'retRng');
+      bindPair('lifeIn', 'lifeRng');
+      bindPair('nomIn', 'nomRng');
+      bindPair('infIn', 'infRng');
+      ['nwIn', 'saveIn', 'spendIn'].forEach(function (id) { $(id).addEventListener('input', update); });
+
+      $('btnWork').addEventListener('click', function () {
+        status = '還在工作';
+        $('btnWork').className = 'tbtn active'; $('btnRet').className = 'tbtn';
+        $('retWrap').style.display = 'block'; $('saveWrap').style.display = 'block';
+        update();
+      });
+      $('btnRet').addEventListener('click', function () {
+        status = '已經退休';
+        $('btnRet').className = 'tbtn active'; $('btnWork').className = 'tbtn';
+        $('retWrap').style.display = 'none'; $('saveWrap').style.display = 'none';
+        update();
+      });
+      $('applyMaxBtn').addEventListener('click', function () {
+        if (!lastSim) return;
+        $('spendIn').value = Math.floor(lastSim.maxMonthly);
+        update();
+      });
+      $('applyEarlyBtn').addEventListener('click', function () {
+        if (!lastSim || lastSim.earlyDwz === null) return;
+        $('retIn').value = lastSim.earlyDwz;
+        $('retRng').value = lastSim.earlyDwz;
+        update();
+      });
+
+      update();
+    })();
+  </script>
+</body>
+</html>

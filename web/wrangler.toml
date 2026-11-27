@@ -1,0 +1,25 @@
+# Cloudflare Pages + Functions + D1 Configuration
+# Zero secrets stored here! Configure optional API keys via:
+#   npx wrangler pages secret put FUGLE_API_KEY
+#   npx wrangler pages secret put FINMIND_TOKEN
+#   npx wrangler pages secret put TWELVEDATA_API_KEY
+#   npx wrangler pages secret put GAS_BRIDGE_URL
+
+name = "betacalculator-dwz"
+compatibility_date = "2026-03-01"
+pages_build_output_dir = "public"
+
+[vars]
+APP_ENV = "production"
+# Restrict CORS strictly to your own domain(s), comma-separated:
+ALLOWED_ORIGINS = "https://betacalculator-dwz.pages.dev"
+# Optional: set your Cloudflare Zero Trust team domain & AUD tag for explicit JWT signature verification
+# CF_ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"
+# CF_ACCESS_AUD = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "betacalculator_db"
+# Replace after running: npx wrangler d1 create betacalculator_db
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

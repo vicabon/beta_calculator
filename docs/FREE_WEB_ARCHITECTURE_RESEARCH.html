@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>免費平台全功能網頁架構研究報告（先研究、不實作）</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --blue: #3b82f6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --cyan: #06b6d4;
+      --violet: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(circle at top left, #172554 0%, var(--bg) 48%);
+      color: var(--text);
+      line-height: 1.62;
+      padding: 28px 18px 64px;
+    }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 30px;
+      margin-bottom: 22px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .badge {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid #3b82f666; background: #1d4ed826; color: #93c5fd;
+    }
+    .badge.green { border-color: #10b98166; background: #05966926; color: #6ee7b7; }
+    .badge.amber { border-color: #f59e0b66; background: #d9770626; color: #fcd34d; }
+    .badge.violet { border-color: #8b5cf666; background: #6d28d926; color: #c4b5fd; }
+    .hero h1 { font-size: 25px; font-weight: 800; margin-bottom: 8px; }
+    .hero p { color: var(--muted); font-size: 14px; max-width: 920px; }
+
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px; margin-top: 18px;
+    }
+    .kpi {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    }
+    .kpi-label { font-size: 12px; color: var(--muted); }
+    .kpi-val { font-size: 20px; font-weight: 800; margin-top: 3px; }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .c-emerald { color: var(--emerald); }
+    .c-blue { color: var(--blue); }
+    .c-amber { color: var(--amber); }
+    .c-cyan { color: var(--cyan); }
+    .c-rose { color: var(--rose); }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 26px;
+      margin-bottom: 20px;
+    }
+    section h2 {
+      font-size: 18px; font-weight: 700; margin-bottom: 14px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    section h3 { font-size: 15px; font-weight: 700; margin: 14px 0 8px; color: #e2e8f0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .card.highlight { border-color: #10b98188; background: linear-gradient(180deg, #064e3b33 0%, var(--card) 100%); }
+    .card.warn { border-color: #f43f5e66; background: linear-gradient(180deg, #88133722 0%, var(--card) 100%); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #1e293b; text-align: left; vertical-align: top; }
+    th { background: #1e293b; color: #cbd5e1; font-weight: 700; font-size: 12px; }
+    tr:hover td { background: #1e293b55; }
+    .center { text-align: center; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px; background: #0f172a; border: 1px solid #334155;
+      padding: 1px 6px; border-radius: 5px; color: #93c5fd;
+    }
+    ul, ol { padding-left: 20px; font-size: 13.5px; color: #e2e8f0; }
+    li { margin-bottom: 6px; }
+
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+    }
+    .pill.ok { background: #05966933; color: #6ee7b7; border: 1px solid #10b98166; }
+    .pill.no { background: #e11d4833; color: #fda4af; border: 1px solid #f43f5e66; }
+    .pill.mid { background: #d9770633; color: #fcd34d; border: 1px solid #f59e0b66; }
+
+    .arch-diagram {
+      background: #0f172a; border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; overflow-x: auto; margin-top: 10px;
+    }
+    .arch-diagram svg { width: 100%; min-width: 760px; height: auto; display: block; }
+
+    .decision-box {
+      background: #0f172a; border: 1px solid #3b82f666; border-left: 4px solid var(--blue);
+      border-radius: 10px; padding: 14px 16px; margin-top: 10px;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="badges">
+        <span class="badge violet">🔬 研究階段（先不實作）</span>
+        <span class="badge green">💰 100% 免費平台架構（$0 / 月）</span>
+        <span class="badge">🔥 全功能 100% 對齊目前系統</span>
+        <span class="badge amber">🛡️ 內建 AI 六層驗證設計</span>
+      </div>
+      <h1>免費平台全功能網頁架構研究報告</h1>
+      <p>
+        系統性評估 2026 年主流免費託管與 Serverless 平台，規劃一套 <strong>$0 零成本、永不休眠、免綁卡零超額扣款</strong> 的獨立網頁架構，
+        100% 完整支援現有 Google Drive 版所有功能（對齊 <code>alphalab.site/fire</code> 的 Die With Zero 計算機 ＋ 自訂持倉與整體 Beta ＋ 三源以上今日/歷史股價校對與區間追蹤）。
+      </p>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">🏆 推薦主力免費架構</div>
+          <div class="kpi-val c-emerald">Cloudflare 全家桶</div>
+          <div class="kpi-sub">Pages + Workers + D1 + GitHub Actions</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">每月平台硬體成本</div>
+          <div class="kpi-val c-blue">$0 USD</div>
+          <div class="kpi-sub">硬上限防呆，無意外超額帳單</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">免費運算與資料庫額度</div>
+          <div class="kpi-val c-cyan">10萬次 / 500萬讀</div>
+          <div class="kpi-sub">Workers 每日呼叫 &amp; D1 每日讀取</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">核心程式碼複用率</div>
+          <div class="kpi-val c-amber">100%</div>
+          <div class="kpi-sub">FireEngine / BetaEngine / Reconciler 直接移植</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. TECHNICAL BOTTLENECKS -->
+    <section>
+      <h2>一、全功能搬遷至免費網頁的三大技術瓶頸與解法</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3 style="margin-top:0; color:#fda4af;">🚧 瓶頸 1：瀏覽器 CORS 封鎖</h3>
+          <p style="font-size:13px; color:#cbd5e1; margin-bottom:8px;">
+            純靜態託管（如單獨 GitHub Pages）受瀏覽器同源政策限制，無法直呼 Yahoo Finance、TWSE、TPEx、Stooq API。
+          </p>
+          <p style="font-size:13px; color:#6ee7b7;">
+            <strong>✅ 解法：</strong>搭配免費 Edge Serverless 代理（Cloudflare Pages Functions / Workers），由伺服器端並行抓取並回傳乾淨 JSON。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0; color:#fcd34d;">🚧 瓶頸 2：GOOGLEFINANCE 無公開 REST API</h3>
+          <p style="font-size:13px; color:#cbd5e1; margin-bottom:8px;">
+            <code>=GOOGLEFINANCE()</code> 僅限 Google 試算表內運作；外部網頁硬爬蟲違反條款且易觸發反機器人驗證。
+          </p>
+          <p style="font-size:13px; color:#6ee7b7;">
+            <strong>✅ 解法：</strong>主力改採 4 個合法官方免費 API（TWSE/TPEx ＋ Yahoo v8 ＋ FinMind ＋ <strong>Fugle 富果</strong>；美股用 Yahoo/Stooq/FinMind/TwelveData），並可選配現有 GAS 端點當第 5 源！
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0; color:#93c5fd;">🚧 瓶頸 3：雲端共享 IP 限流與 10ms CPU</h3>
+          <p style="font-size:13px; color:#cbd5e1; margin-bottom:8px;">
+            CF Workers 免費版每次執行 CPU 上限 10ms（網路 I/O 不計入），且共享資料中心 IP 偶爾可能遭上游 429 限流。
+          </p>
+          <p style="font-size:13px; color:#6ee7b7;">
+            <strong>✅ 解法：</strong>GitHub Actions 每日盤後解析大檔寫入 D1（歷史收盤永久快取）＋ Edge Cache 60 秒即時快取 ＋ 4 選 3 高可用降級！
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PLATFORM COMPARISON -->
+    <section>
+      <h2>二、六大免費平台 2026 真實額度與地雷橫向評比</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>平台方案</th>
+              <th>靜態流量 / 頻寬</th>
+              <th>免費 Serverless 運算</th>
+              <th>免費 DB / 快取</th>
+              <th class="center">會休眠？</th>
+              <th class="center">允許商用？</th>
+              <th>綜合評估與隱藏地雷</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#064e3b22;">
+              <td><strong>🏆 Cloudflare Pages + Workers + D1/KV</strong></td>
+              <td><strong>無上限免費</strong></td>
+              <td>100,000 次/日<br>CPU 10ms/次（I/O不計）<br>50 子請求/次</td>
+              <td>D1：500萬讀 / 10萬寫/日 (5GB)<br>KV：10萬讀 / 1千寫/日<br>Cache API 免費</td>
+              <td class="center"><span class="pill ok">永不休眠</span></td>
+              <td class="center"><span class="pill ok">✅ 允許</span></td>
+              <td><strong>首選推薦</strong>：一站整合前/後端/SQLite、台北邊緣低延遲、超限硬停不扣費；僅需避免在 Worker 解析超大 JSON。</td>
+            </tr>
+            <tr>
+              <td><strong>Vercel (Hobby)</strong></td>
+              <td>100 GB/月</td>
+              <td>1,000,000 次/月<br>4 CPU-hrs、完整 Node.js</td>
+              <td>無內建持久 DB（需外接）</td>
+              <td class="center"><span class="pill ok">不休眠</span></td>
+              <td class="center"><span class="pill no">❌ 禁止</span></td>
+              <td>開發體驗佳、無 10ms 壓力；但<strong>嚴格限個人非商用</strong>，且缺少免費不休眠 DB。</td>
+            </tr>
+            <tr>
+              <td><strong>GitHub Pages + Actions</strong></td>
+              <td>100 GB/月（軟上限）</td>
+              <td>Pages 無後端；<br>Actions <strong>公開倉無限分鐘</strong>（私有 2,000 分/月）</td>
+              <td>靜態 JSON 充當免費 CDN</td>
+              <td class="center"><span class="pill ok">不休眠</span></td>
+              <td class="center"><span class="pill no">❌ 禁 SaaS</span></td>
+              <td>無法單獨應付即時自訂標的（缺 Proxy）；但極適合當 <strong>Cloudflare 架構的免費盤後排程預熱層</strong>。</td>
+            </tr>
+            <tr>
+              <td><strong>Deno Deploy (Free)</strong></td>
+              <td>20 GiB/月</td>
+              <td>1,000,000 次/月<br>10 Active CPU-hrs</td>
+              <td>Deno KV（有限額）</td>
+              <td class="center"><span class="pill mid">秒喚醒</span></td>
+              <td class="center"><span class="pill ok">✅ 小型可</span></td>
+              <td>原生 TypeScript 且 CPU 寬裕；但 20 GiB 流量額度偏小。</td>
+            </tr>
+            <tr>
+              <td><strong>Google Apps Script Web App</strong></td>
+              <td>Google 網域</td>
+              <td>6 分/次、<code>UrlFetchApp</code> 20,000 次/日</td>
+              <td>Google Sheets（≤1,000 <code>GOOGLEFINANCE</code>）</td>
+              <td class="center"><span class="pill ok">不休眠</span></td>
+              <td class="center"><span class="pill mid">⚠️ 配額緊</span></td>
+              <td><strong>不適合當主力網頁</strong>：並發僅 ~30 人、平均延遲 ~2.5s、具頂部警語；適合作為低頻 <code>GOOGLEFINANCE</code> 輔助橋接。</td>
+            </tr>
+            <tr style="background:#88133718;">
+              <td><strong>⚠️ 避坑：Netlify / Firebase Spark / Supabase</strong></td>
+              <td>Netlify ~15 GB<br>Firebase 10 GB<br>Supabase 5 GB</td>
+              <td>Netlify 300 統一信用點池<br><strong>Firebase Spark 無 Functions</strong></td>
+              <td>Supabase 500MB Postgres<br>Firebase 50k 讀/日</td>
+              <td class="center"><span class="pill no">Supabase 7天暫停</span></td>
+              <td class="center"><span class="pill mid">視平台</span></td>
+              <td><strong>三大硬傷</strong>：Netlify 信用點極易耗盡停站；Firebase Spark 無後端無法解 CORS；Supabase 7 天低流量會直接鎖站休眠。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. ARCHITECTURE DIAGRAM -->
+    <section>
+      <h2>三、推薦終極零元架構藍圖（Cloudflare × GitHub Actions × Local-First）</h2>
+      <div class="arch-diagram">
+        <svg viewBox="0 0 920 385" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+            </marker>
+          </defs>
+          <!-- Layer 1: Browser -->
+          <rect x="16" y="18" width="250" height="348" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="141" y="42" fill="#93c5fd" font-size="13" font-weight="700" text-anchor="middle">1. 使用者瀏覽器 (100% 隱私)</text>
+          <rect x="32" y="60" width="218" height="92" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="141" y="82" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">前端 SPA (Vite + TypeScript)</text>
+          <text x="141" y="102" fill="#94a3b8" font-size="11" text-anchor="middle">• Die With Zero (仿 AlphaLab)</text>
+          <text x="141" y="119" fill="#94a3b8" font-size="11" text-anchor="middle">• 自訂持倉與整體 Beta + 壓力測試</text>
+          <text x="141" y="136" fill="#94a3b8" font-size="11" text-anchor="middle">• 四源校對與歷史走勢圖表</text>
+
+          <rect x="32" y="168" width="218" height="82" rx="8" fill="#0f172a" stroke="#10b981"/>
+          <text x="141" y="190" fill="#6ee7b7" font-size="12" font-weight="700" text-anchor="middle">共享核心 packages/core</text>
+          <text x="141" y="210" fill="#94a3b8" font-size="11" text-anchor="middle">直接複用 FireEngine / BetaEngine</text>
+          <text x="141" y="227" fill="#94a3b8" font-size="11" text-anchor="middle">60fps 即時滑桿 · 財務零上傳</text>
+
+          <rect x="32" y="266" width="218" height="82" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="141" y="288" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">Local-First 資料儲存</text>
+          <text x="141" y="308" fill="#94a3b8" font-size="11" text-anchor="middle">localStorage / IndexedDB</text>
+          <text x="141" y="325" fill="#94a3b8" font-size="11" text-anchor="middle">+ JSON / .xlsx 匯出入互通</text>
+
+          <!-- Layer 2: Cloudflare -->
+          <rect x="308" y="18" width="286" height="238" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+          <text x="451" y="42" fill="#6ee7b7" font-size="13" font-weight="700" text-anchor="middle">2. Cloudflare 免費邊緣層 ($0)</text>
+          <rect x="324" y="58" width="254" height="44" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="451" y="77" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">Cloudflare Pages (無限免費靜態流量)</text>
+          <text x="451" y="93" fill="#94a3b8" font-size="10.5" text-anchor="middle">全球 CDN + 免費 HTTPS + 自訂網域</text>
+
+          <rect x="324" y="114" width="254" height="62" rx="8" fill="#0f172a" stroke="#06b6d4"/>
+          <text x="451" y="134" fill="#67e8f9" font-size="12" font-weight="700" text-anchor="middle">Workers / Functions (100k req/日)</text>
+          <text x="451" y="151" fill="#94a3b8" font-size="10.5" text-anchor="middle">/api/quote/live · /history · /range · /fx</text>
+          <text x="451" y="166" fill="#94a3b8" font-size="10.5" text-anchor="middle">Edge Cache 60s · SSRF 白名單 · CORS 保護</text>
+
+          <rect x="324" y="188" width="254" height="54" rx="8" fill="#0f172a" stroke="#f59e0b"/>
+          <text x="451" y="208" fill="#fcd34d" font-size="12" font-weight="700" text-anchor="middle">Cloudflare D1 SQLite (500萬讀/日)</text>
+          <text x="451" y="226" fill="#94a3b8" font-size="10.5" text-anchor="middle">已通過三源驗證之歷史收盤價永久快取</text>
+
+          <!-- Layer 2b: GitHub Actions -->
+          <rect x="308" y="274" width="286" height="92" rx="12" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="451" y="298" fill="#c4b5fd" font-size="13" font-weight="700" text-anchor="middle">3. GitHub Actions 免費排程層</text>
+          <text x="451" y="320" fill="#e2e8f0" font-size="11.5" text-anchor="middle">公開倉無限分鐘 · 每日台/美股盤後執行</text>
+          <text x="451" y="339" fill="#94a3b8" font-size="11" text-anchor="middle">解析全市場 JSON → 預熱寫入 D1 避開 10ms CPU</text>
+          <text x="451" y="355" fill="#94a3b8" font-size="10.5" text-anchor="middle">95% 歷史查詢零外部 API 呼叫</text>
+
+          <!-- Layer 3: 4+ Price Sources -->
+          <rect x="636" y="18" width="268" height="348" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="770" y="42" fill="#fcd34d" font-size="13" font-weight="700" text-anchor="middle">4. 權威股價來源 (4 選 3 共識)</text>
+          <rect x="652" y="60" width="236" height="52" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="770" y="81" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">來源 1：TWSE / TPEx 官方 API</text>
+          <text x="770" y="99" fill="#94a3b8" font-size="10.5" text-anchor="middle">MIS / OpenAPI / STOCK_DAY (美股 Stooq)</text>
+
+          <rect x="652" y="122" width="236" height="52" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="770" y="143" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">來源 2：Yahoo Finance v8</text>
+          <text x="770" y="161" fill="#94a3b8" font-size="10.5" text-anchor="middle">query1/query2 備援 · 未還原歷史收盤</text>
+
+          <rect x="652" y="184" width="236" height="52" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="770" y="205" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">來源 3：FinMind OpenAPI</text>
+          <text x="770" y="223" fill="#94a3b8" font-size="10.5" text-anchor="middle">TaiwanStockPrice / USStockPrice</text>
+
+          <rect x="652" y="246" width="236" height="52" rx="8" fill="#0f172a" stroke="#334155"/>
+          <text x="770" y="267" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle">來源 4：Fugle 富果免費 API</text>
+          <text x="770" y="285" fill="#94a3b8" font-size="10.5" text-anchor="middle">60次/分官方台股 (美股 TwelveData/Finnhub)</text>
+
+          <rect x="652" y="308" width="236" height="44" rx="8" fill="#0f172a" stroke="#64748b" stroke-dasharray="4,3"/>
+          <text x="770" y="328" fill="#cbd5e1" font-size="11.5" font-weight="700" text-anchor="middle">選配來源 5：現有 GAS Bridge</text>
+          <text x="770" y="344" fill="#94a3b8" font-size="10" text-anchor="middle">Google Finance 橋接 + 獨立 Google 出口 IP</text>
+
+          <!-- Arrows -->
+          <line x1="266" y1="80" x2="322" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="266" y1="145" x2="322" y2="145" stroke="#06b6d4" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="578" y1="145" x2="650" y2="145" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="451" y1="274" x2="451" y2="244" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="594" y1="320" x2="650" y2="270" stroke="#8b5cf6" stroke-width="1.8" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        </svg>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="card highlight">
+          <h3 style="margin-top:0;">✨ 為什麼這個架構最穩健？</h3>
+          <ul>
+            <li><strong>完全零個資入庫</strong>：僅傳遞公開代號查詢股價，所有資產與退休試算 100% 留在使用者本機。</li>
+            <li><strong>歷史收盤永久快取</strong>：通過三源驗證（<code>VERIFIED</code>）即鎖定寫入 D1，冷啟動後歷史查詢幾乎零上游 API 消耗。</li>
+            <li><strong>免費配額安全餘裕大</strong>：每日 100 名活躍用戶僅消耗不到 Workers 配額的 1% 與 D1 配額的 0.5%。</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3 style="margin-top:0;">⚠️ 必須事先落地的防護機制</h3>
+          <ul>
+            <li><strong>防第三方盜刷 Proxy</strong>：強制驗證 <code>Origin</code> 白名單 ＋ Cloudflare 單 IP 頻率限流，防止外部爬蟲耗盡免費額度。</li>
+            <li><strong>單次 CPU 控管</strong>：Worker 絕不下載全市場大檔；大檔解析一律交給 GitHub Actions 盤後處理。</li>
+            <li><strong>資料備份防遺失</strong>：提供一鍵「匯出 JSON / 匯出 <code>.xlsx</code>」，與現有 Google 試算表版雙向相容。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. AI 6-LAYER VERIFICATION DESIGN -->
+    <section>
+      <h2>四、AI 六層驗證框架事前設計（對應 GEMINI.md 規範 B）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>階段</th>
+              <th>網頁版驗證重點</th>
+              <th>通過標準</th>
+              <th>預定驗證工具與驗收指標</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. 形式審查</strong></td>
+              <td>Monorepo 結構、OpenAPI 契約、TypeScript 型別、6 預設 Beta 一致性</td>
+              <td>100% 必要欄位完整</td>
+              <td><code>tsc --noEmit</code>、ESLint、Schema 檢核腳本；抽離 <code>packages/core</code> 讓 GAS 與網頁共享單一真相源。</td>
+            </tr>
+            <tr>
+              <td><strong>2. 功能驗證</strong></td>
+              <td>DWZ 歸零收斂、Beta 與壓力測試、4 源即時/歷史/區間校對、離群與 Failover</td>
+              <td>核心案例通過率 ≥95%（目標 100%）</td>
+              <td>Vitest 單元/整合測試（繼承 29 項核心測試並擴充 Worker API Mock）＋ Playwright E2E 瀏覽器測試。</td>
+            </tr>
+            <tr>
+              <td><strong>3. 品質評估</strong></td>
+              <td>對齊 <code>alphalab.site/fire</code> RWD 體驗、未還原收盤口徑一致、風險警語完整</td>
+              <td>人工 / Judge ≥4/5</td>
+              <td>桌機/手機 RWD 檢核、與 Google Sheets 版交叉比對誤差 <code>&lt; 0.01 TWD</code>。</td>
+            </tr>
+            <tr>
+              <td><strong>4. 安全與治理</strong></td>
+              <td>CORS 白名單、SSRF 網域攔截、CSP 標頭、API Key 存 Workers Secrets、零個資上傳</td>
+              <td>零 Critical / High 風險</td>
+              <td>自動化 SSRF/XSS/CORS/Rate-Limit 滲透測試 ＋ 靜態密鑰掃描。</td>
+            </tr>
+            <tr>
+              <td><strong>5. 穩定性與效能</strong></td>
+              <td>首屏速度、API P95 延遲、10% 故障注入 4 選 3 韌性、零超額費用</td>
+              <td>成功率 ≥98%，P95 達 SLA</td>
+              <td>Lighthouse ≥95；快取命中 P95 <code>&lt;150ms</code>、未命中並行 P95 <code>&lt;2500ms</code>；月成本嚴格 <code>$0</code>。</td>
+            </tr>
+            <tr>
+              <td><strong>6. 實際成效</strong></td>
+              <td>對照人工查價流程與試算表版，評估真實操作效率與行動裝置體驗</td>
+              <td>A/B Test 達預定改善幅度</td>
+              <td>量測首次完成試算耗時 TTV <code>&lt;60 秒</code>、手機端可用率 100%、異常股價攔截率 <code>≥95%</code>。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. DECISIONS BEFORE IMPLEMENTATION -->
+    <section>
+      <h2>五、進入實作前的 3 項待決策項目（尚未動工）</h2>
+      <div class="decision-box">
+        <ol>
+          <li><strong>託管平台拍板</strong>：採用 <strong>Cloudflare Pages + Workers + D1 + GitHub Actions（推薦主力：永不休眠、可商用、無限靜態流量）</strong>，還是 Vercel Hobby（限個人非商用）？</li>
+          <li><strong>第 4 股價來源選擇</strong>：台股以 <strong>Fugle 富果免費官方 API</strong> 作為第 4 來源（需免費申請 Key），還是串接既有 <strong>Google Apps Script <code>GOOGLEFINANCE</code> 橋接</strong>，或<strong>兩者兼具（達 5 源）</strong>？</li>
+          <li><strong>使用者資料保存方式</strong>：比照 <code>alphalab.site/fire</code> 採 <strong>100% 免註冊純本機儲存（<code>localStorage</code> + JSON/Excel 匯出入）</strong>，還是需要額外整合 Google Drive 跨裝置雲端同步？</li>
+        </ol>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-top:12px;">
+        📌 <strong>目前狀態</strong>：已嚴格遵守「先不實作」與 <code>GEMINI.md</code> 規範（A. 已記錄 Prompt #4/#5 於 <code>PROMPT.md</code>；B. 已完成 AI 六層驗證事前規劃；C. 已同步產出 <code>.md</code> 與 <code>.html</code> 報告；D. 尚未執行任何 <code>git add/commit/push</code>）。待您拍板上述決策並下達指令後即可啟動實作！
+      </p>
+    </section>
+
+    <footer>
+      BetaCalculator · Free Web Platform Architecture Research · Generated 2026-11-27 (+08:00)
+    </footer>
+  </div>
+</body>
+</html>

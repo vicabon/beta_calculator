@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Die With Zero × Beta 互動計算機</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .header {
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .header h1 { font-size: 16px; font-weight: 700; color: #fff; }
+    .header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .pill-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .pill {
+      font-size: 11px; padding: 3px 8px; border-radius: 999px;
+      background: #1d4ed826; border: 1px solid #3b82f666; color: #93c5fd;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 12px; font-weight: 700; color: #cbd5e1;
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .toggle-group { display: flex; gap: 6px; margin-bottom: 10px; }
+    .toggle-btn {
+      flex: 1; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--card-border);
+      background: #0f172a; color: var(--muted); cursor: pointer; font-weight: 600; font-size: 12px;
+    }
+    .toggle-btn.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    .field { margin-bottom: 9px; }
+    .field-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .field label { color: #e2e8f0; font-size: 12px; }
+    .field input[type="number"] {
+      width: 115px; background: #0f172a; border: 1px solid var(--card-border);
+      color: #fff; border-radius: 6px; padding: 4px 7px; text-align: right; font-size: 12px;
+    }
+    .field input[type="range"] { width: 100%; accent-color: var(--primary); }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .kpi {
+      background: #0f172a; border: 1px solid var(--card-border);
+      border-radius: 8px; padding: 8px;
+    }
+    .kpi .k-label { font-size: 11px; color: var(--muted); }
+    .kpi .k-val { font-size: 15px; font-weight: 700; margin-top: 2px; color: #fff; }
+    .kpi.emerald .k-val { color: var(--emerald); }
+    .kpi.amber .k-val { color: var(--amber); }
+    .kpi.rose .k-val { color: var(--rose); }
+    .diag-box {
+      padding: 8px 10px; border-radius: 8px; font-size: 12px;
+      background: #0f172a; border-left: 3px solid var(--emerald); margin-bottom: 8px;
+    }
+    .diag-box.warn { border-left-color: var(--rose); color: #fecdd3; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .btn {
+      flex: 1; padding: 8px 10px; border: none; border-radius: 7px;
+      font-weight: 600; font-size: 12px; cursor: pointer; color: #fff;
+    }
+    .btn-primary { background: var(--primary); }
+    .btn-emerald { background: var(--emerald); }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: #e2e8f0; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #chartWrap { background: #0f172a; border-radius: 8px; padding: 8px; border: 1px solid var(--card-border); }
+    svg { width: 100%; height: 155px; display: block; }
+    .legend { display: flex; gap: 10px; font-size: 11px; color: var(--muted); margin-top: 5px; justify-content: center; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    #statusMsg { font-size: 11px; color: #93c5fd; margin-top: 6px; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔥 Die With Zero 退休計算機</h1>
+    <p>對齊 alphalab.site/fire 設計 · 所有數字以「今日實質幣值」呈現</p>
+    <div class="pill-row">
+      <span class="pill" id="pillBeta">整體 Beta: --</span>
+      <span class="pill" id="pillReal">實質報酬: --</span>
+      <span class="pill" id="pillCash">現金比: --</span>
+    </div>
+  </div>
+
+  <!-- Results & Chart -->
+  <div class="card">
+    <div class="card-title">試算結果總覽</div>
+    <div id="diagBox" class="diag-box">載入試算資料中...</div>
+    <div class="kpi-grid">
+      <div class="kpi emerald">
+        <div class="k-label">每月最高可花（歸零反推）</div>
+        <div class="k-val" id="kpiMaxSpend">--</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">DWZ 退休目標金額</div>
+        <div class="k-val" id="kpiDwzTarget">--</div>
+      </div>
+      <div class="kpi amber">
+        <div class="k-label">最早退休（DWZ vs 4% FIRE）</div>
+        <div class="k-val" id="kpiEarliest">--</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">預期壽命終點結餘</div>
+        <div class="k-val" id="kpiEndBal">--</div>
+      </div>
+    </div>
+
+    <div id="chartWrap">
+      <svg id="curveSvg" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
+      <div class="legend">
+        <span><i class="dot" style="background:#3b82f6"></i>實際資產</span>
+        <span><i class="dot" style="background:#10b981"></i>理想歸零曲線</span>
+        <span><i class="dot" style="background:#f59e0b"></i>4% FIRE目標</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-emerald" id="btnApplySpend">✨ 套用此開銷</button>
+      <button class="btn btn-outline" id="btnApplyRetire">🚀 套用最早退休年齡</button>
+    </div>
+  </div>
+
+  <!-- Inputs: About You -->
+  <div class="card">
+    <div class="card-title">1. 關於你</div>
+    <div class="toggle-group">
+      <button type="button" class="toggle-btn active" id="btnWorking">還在工作</button>
+      <button type="button" class="toggle-btn" id="btnRetired">已經退休</button>
+    </div>
+    <div class="field">
+      <div class="field-top"><label for="inAge">現在幾歲</label><input type="number" id="inAge" min="18" max="100" value="35"></div>
+      <input type="range" id="rngAge" min="18" max="85" value="35">
+    </div>
+    <div class="field" id="retireAgeWrap">
+      <div class="field-top"><label for="inRetire">想幾歲退休</label><input type="number" id="inRetire" min="18" max="100" value="55"></div>
+      <input type="range" id="rngRetire" min="20" max="85" value="55">
+    </div>
+    <div class="field">
+      <div class="field-top"><label for="inLife">預計活到幾歲</label><input type="number" id="inLife" min="50" max="115" value="85"></div>
+      <input type="range" id="rngLife" min="60" max="105" value="85">
+    </div>
+  </div>
+
+  <!-- Inputs: Assets & Cash Flow -->
+  <div class="card">
+    <div class="card-title">2. 資產與收支（TWD 今日幣值）</div>
+    <div class="field">
+      <div class="field-top"><label for="inNetWorth">目前淨資產</label><input type="number" id="inNetWorth" step="100000" value="5000000"></div>
+    </div>
+    <div class="field" id="savingsWrap">
+      <div class="field-top"><label for="inSavings">每月能存 / 投入</label><input type="number" id="inSavings" step="5000" value="50000"></div>
+    </div>
+    <div class="field">
+      <div class="field-top"><label for="inSpending">退休後每月開銷</label><input type="number" id="inSpending" step="5000" value="60000"></div>
+    </div>
+  </div>
+
+  <!-- Inputs: Advanced -->
+  <div class="card">
+    <div class="card-title">3. 進階假設</div>
+    <div class="field">
+      <div class="field-top"><label for="inReturn">年化投資報酬率 (%)</label><input type="number" id="inReturn" step="0.1" value="7.0"></div>
+      <input type="range" id="rngReturn" min="0" max="15" step="0.1" value="7.0">
+    </div>
+    <div class="field">
+      <div class="field-top"><label for="inInflation">通貨膨脹率 (%)</label><input type="number" id="inInflation" step="0.1" value="3.0"></div>
+      <input type="range" id="rngInflation" min="0" max="8" step="0.1" value="3.0">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSyncSheet">💾 套用並同步回試算表</button>
+    </div>
+    <div id="statusMsg"></div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      var state = {
+        status: '還在工作',
+        netWorthMode: '連動持倉總市值',
+        monthlyPension: 0,
+        pensionStartAge: 65,
+        classicFireSwr: 0.04,
+        lastSim: null
+      };
+
+      function $(id) { return document.getElementById(id); }
+      function fmtMoney(n) {
+        if (!isFinite(n)) return '--';
+        if (Math.abs(n) >= 10000) return (n / 10000).toFixed(1) + ' 萬';
+        return Math.round(n).toLocaleString('en-US');
+      }
+
+      // Pure client-side Die With Zero engine mirroring FireEngine.gs for instant 60fps slider response
+      function runLocalSim(p) {
+        var realR = (1 + p.nominalReturn) / (1 + p.inflationRate) - 1;
+        var effRetire = p.status === '已經退休' ? p.currentAge : Math.max(p.currentAge, Math.min(p.lifeExpectancy, p.retireAge));
+        var m = Math.max(0, effRetire - p.currentAge);
+        var n = Math.max(0, p.lifeExpectancy - effRetire);
+        var annSave = p.status === '已經退休' ? 0 : Math.max(0, p.monthlySavings) * 12;
+        var annSpend = Math.max(0, p.monthlySpending) * 12;
+        var annPen = Math.max(0, p.monthlyPension || 0) * 12;
+        var penAge = p.pensionStartAge || 65;
+        var pvFactor = function (r, yrs) { return yrs <= 0 ? 0 : (Math.abs(r) < 1e-9 ? yrs : (1 - Math.pow(1 + r, -yrs)) / r); };
+        var calcDwzNeed = function (startAge) {
+          var yrs = Math.max(0, p.lifeExpectancy - startAge);
+          var sum = 0;
+          for (var k = 1; k <= yrs; k++) {
+            var a = startAge + k - 1;
+            var pen = a >= penAge ? annPen : 0;
+            sum += Math.max(0, annSpend - pen) / Math.pow(1 + realR, k);
+          }
+          return sum;
+        };
+        var fvWork = Math.abs(realR) < 1e-9
+          ? p.currentNetWorth + annSave * m
+          : p.currentNetWorth * Math.pow(1 + realR, m) + annSave * ((Math.pow(1 + realR, m) - 1) / realR);
+        var dwzTarget = calcDwzNeed(effRetire);
+        var fireTarget = annSpend / (p.classicFireSwr || 0.04);
+        var fullPenPv = 0;
+        for (var pk = 1; pk <= n; pk++) {
+          var pa = effRetire + pk - 1;
+          if (pa >= penAge) fullPenPv += annPen / Math.pow(1 + realR, pk);
+        }
+        var maxAnnSpend = n > 0 ? Math.max(0, (fvWork + fullPenPv) / pvFactor(realR, n)) : 0;
+
+        var traj = [];
+        var bal = p.currentNetWorth;
+        var ideal = p.currentNetWorth;
+        var workBal = p.currentNetWorth;
+        var depAge = null;
+        var earlyDwz = null;
+        var earlyFire = null;
+        var totalYrs = Math.max(1, p.lifeExpectancy - p.currentAge);
+
+        for (var y = 0; y <= totalYrs; y++) {
+          var age = p.currentAge + y;
+          var isEnd = age === p.lifeExpectancy;
+          var needAtAge = calcDwzNeed(age);
+          if (earlyDwz === null && workBal >= needAtAge - 1e-4) earlyDwz = age;
+          if (earlyFire === null && workBal >= fireTarget - 1e-4) earlyFire = age;
+          var endB = bal;
+          var endI = ideal;
+          if (!isEnd) {
+            if (age < effRetire) {
+              endB = bal * (1 + realR) + annSave;
+              endI = ideal * (1 + realR) + annSave;
+            } else {
+              var curPen = age >= penAge ? annPen : 0;
+              endB = bal * (1 + realR) - (annSpend - curPen);
+              endI = ideal * (1 + realR) - (maxAnnSpend - curPen);
+            }
+            if (depAge === null && endB < -1e-2) depAge = age + 1;
+          }
+          traj.push({ age: age, real: isEnd ? bal : endB, ideal: isEnd ? ideal : endI, fire: fireTarget });
+          if (!isEnd) {
+            bal = endB;
+            ideal = endI;
+            workBal = workBal * (1 + realR) + annSave;
+          }
+        }
+        return {
+          realReturnRate: realR,
+          dwzTargetAtRetireAge: dwzTarget,
+          classicFireTarget: fireTarget,
+          maxMonthlySpending: maxAnnSpend / 12,
+          endingRealBalance: traj[traj.length - 1].real,
+          depletionAge: depAge,
+          earliestDwzRetireAge: earlyDwz,
+          earliestClassicFireAge: earlyFire,
+          trajectory: traj
+        };
+      }
+
+      function renderSvg(traj) {
+        var svg = $('curveSvg');
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        if (!traj || traj.length < 2) return;
+
+        var vals = [0];
+        traj.forEach(function (pt) { vals.push(pt.real, pt.ideal, pt.fire); });
+        var minV = Math.min.apply(null, vals);
+        var maxV = Math.max.apply(null, vals);
+        if (maxV === minV) maxV = minV + 1;
+
+        var W = 360, H = 140, pad = 8;
+        var mapX = function (i) { return pad + (i / (traj.length - 1)) * (W - pad * 2); };
+        var mapY = function (v) { return H - pad - ((v - minV) / (maxV - minV)) * (H - pad * 2); };
+
+        var ns = 'http://www.w3.org/2000/svg';
+        // Zero baseline
+        var zeroY = mapY(0);
+        var base = document.createElementNS(ns, 'line');
+        base.setAttribute('x1', String(pad)); base.setAttribute('x2', String(W - pad));
+        base.setAttribute('y1', String(zeroY)); base.setAttribute('y2', String(zeroY));
+        base.setAttribute('stroke', '#475569'); base.setAttribute('stroke-dasharray', '3,3');
+        svg.appendChild(base);
+
+        function addLine(key, color, dash) {
+          var pts = traj.map(function (pt, idx) { return mapX(idx).toFixed(1) + ',' + mapY(pt[key]).toFixed(1); }).join(' ');
+          var poly = document.createElementNS(ns, 'polyline');
+          poly.setAttribute('fill', 'none');
+          poly.setAttribute('stroke', color);
+          poly.setAttribute('stroke-width', dash ? '1.8' : '2.6');
+          if (dash) poly.setAttribute('stroke-dasharray', dash);
+          poly.setAttribute('points', pts);
+          svg.appendChild(poly);
+        }
+        addLine('fire', '#f59e0b', '3,3');
+        addLine('ideal', '#10b981', '5,3');
+        addLine('real', '#3b82f6', '');
+      }
+
+      function readInputs() {
+        return {
+          status: state.status,
+          netWorthMode: state.netWorthMode,
+          currentAge: Number($('inAge').value) || 35,
+          retireAge: Number($('inRetire').value) || 55,
+          lifeExpectancy: Math.max((Number($('inAge').value) || 35) + 1, Number($('inLife').value) || 85),
+          currentNetWorth: Number($('inNetWorth').value) || 0,
+          monthlySavings: Number($('inSavings').value) || 0,
+          monthlySpending: Number($('inSpending').value) || 0,
+          monthlyPension: state.monthlyPension,
+          pensionStartAge: state.pensionStartAge,
+          nominalReturn: (Number($('inReturn').value) || 0) / 100,
+          inflationRate: (Number($('inInflation').value) || 0) / 100,
+          classicFireSwr: state.classicFireSwr
+        };
+      }
+
+      function recalcAndRender() {
+        var p = readInputs();
+        var sim = runLocalSim(p);
+        state.lastSim = sim;
+
+        $('pillReal').textContent = '實質報酬: ' + (sim.realReturnRate * 100).toFixed(2) + '%';
+        $('kpiMaxSpend').textContent = Math.round(sim.maxMonthlySpending).toLocaleString('en-US') + ' /月';
+        $('kpiDwzTarget').textContent = fmtMoney(sim.dwzTargetAtRetireAge);
+        $('kpiEndBal').textContent = fmtMoney(sim.endingRealBalance);
+
+        var dwzAgeStr = sim.earliestDwzRetireAge !== null ? sim.earliestDwzRetireAge + '歲' : '未達';
+        var fireAgeStr = sim.earliestClassicFireAge !== null ? sim.earliestClassicFireAge + '歲' : '未達';
+        $('kpiEarliest').textContent = dwzAgeStr + ' / ' + fireAgeStr;
+
+        var diag = $('diagBox');
+        if (sim.depletionAge !== null) {
+          diag.className = 'diag-box warn';
+          diag.textContent = '⚠️ 資金將於 ' + sim.depletionAge + ' 歲耗盡，建議調整儲蓄、開銷或退休年齡。';
+        } else if (Math.abs(sim.endingRealBalance) <= Math.max(10000, p.monthlySpending * 1.2)) {
+          diag.className = 'diag-box';
+          diag.textContent = '🎯 完美達成 Die With Zero 死前財產歸零！';
+        } else {
+          diag.className = 'diag-box';
+          diag.textContent = '💰 資產充裕：預計於 ' + p.lifeExpectancy + ' 歲留下 ' + fmtMoney(sim.endingRealBalance) + '（今日幣值）。';
+        }
+        renderSvg(sim.trajectory);
+      }
+
+      function setStatus(s) {
+        state.status = s;
+        $('btnWorking').className = 'toggle-btn' + (s === '還在工作' ? ' active' : '');
+        $('btnRetired').className = 'toggle-btn' + (s === '已經退休' ? ' active' : '');
+        $('retireAgeWrap').style.display = s === '還在工作' ? 'block' : 'none';
+        $('savingsWrap').style.display = s === '還在工作' ? 'block' : 'none';
+        recalcAndRender();
+      }
+
+      function bindPair(numId, rngId) {
+        $(numId).addEventListener('input', function () { $(rngId).value = this.value; recalcAndRender(); });
+        $(rngId).addEventListener('input', function () { $(numId).value = this.value; recalcAndRender(); });
+      }
+      bindPair('inAge', 'rngAge');
+      bindPair('inRetire', 'rngRetire');
+      bindPair('inLife', 'rngLife');
+      bindPair('inReturn', 'rngReturn');
+      bindPair('inInflation', 'rngInflation');
+      ['inNetWorth', 'inSavings', 'inSpending'].forEach(function (id) {
+        $(id).addEventListener('input', function () {
+          if (id === 'inNetWorth') state.netWorthMode = '手動輸入';
+          recalcAndRender();
+        });
+      });
+
+      $('btnWorking').addEventListener('click', function () { setStatus('還在工作'); });
+      $('btnRetired').addEventListener('click', function () { setStatus('已經退休'); });
+
+      $('btnApplySpend').addEventListener('click', function () {
+        if (!state.lastSim) return;
+        $('inSpending').value = Math.floor(state.lastSim.maxMonthlySpending);
+        recalcAndRender();
+        $('statusMsg').textContent = '✨ 已套用最高可花月開銷（點下方按鈕可同步寫回試算表）';
+      });
+
+      $('btnApplyRetire').addEventListener('click', function () {
+        if (!state.lastSim || state.lastSim.earliestDwzRetireAge === null) {
+          $('statusMsg').textContent = '⚠️ 尚未於預期壽命內達成 DWZ 退休門檻';
+          return;
+        }
+        $('inRetire').value = state.lastSim.earliestDwzRetireAge;
+        $('rngRetire').value = state.lastSim.earliestDwzRetireAge;
+        recalcAndRender();
+        $('statusMsg').textContent = '🚀 已套用最早可退休年齡：' + state.lastSim.earliestDwzRetireAge + ' 歲';
+      });
+
+      $('btnSyncSheet').addEventListener('click', function () {
+        var btn = this;
+        btn.disabled = true;
+        $('statusMsg').textContent = '同步寫入 Google 試算表中...';
+        google.script.run
+          .withSuccessHandler(function () {
+            btn.disabled = false;
+            $('statusMsg').textContent = '✅ 已成功同步至「📊 FIRE儀表板」！';
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            $('statusMsg').textContent = '❌ 同步失敗：' + (err && err.message ? err.message : String(err));
+          })
+          .saveSidebarInputsToSheet(readInputs());
+      });
+
+      // Load initial data from Google Sheet
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (data) {
+            if (!data || !data.inputs) return;
+            var inp = data.inputs;
+            state.netWorthMode = inp.netWorthMode || '連動持倉總市值';
+            state.monthlyPension = inp.monthlyPension || 0;
+            state.pensionStartAge = inp.pensionStartAge || 65;
+            state.classicFireSwr = inp.classicFireSwr || 0.04;
+
+            $('inAge').value = inp.currentAge; $('rngAge').value = inp.currentAge;
+            $('inRetire').value = inp.retireAge; $('rngRetire').value = inp.retireAge;
+            $('inLife').value = inp.lifeExpectancy; $('rngLife').value = inp.lifeExpectancy;
+            $('inNetWorth').value = Math.round(inp.currentNetWorth);
+            $('inSavings').value = Math.round(inp.monthlySavings);
+            $('inSpending').value = Math.round(inp.monthlySpending);
+            $('inReturn').value = (inp.nominalReturn * 100).toFixed(1); $('rngReturn').value = (inp.nominalReturn * 100).toFixed(1);
+            $('inInflation').value = (inp.inflationRate * 100).toFixed(1); $('rngInflation').value = (inp.inflationRate * 100).toFixed(1);
+
+            if (data.portfolio) {
+              $('pillBeta').textContent = '整體 Beta: ' + Number(data.portfolio.overallBeta || 0).toFixed(2);
+              $('pillCash').textContent = '現金比: ' + (Number(data.portfolio.cashRatio || 0) * 100).toFixed(1) + '%';
+            }
+            setStatus(inp.status || '還在工作');
+          })
+          .withFailureHandler(function (err) {
+            $('statusMsg').textContent = '讀取試算表失敗：' + (err && err.message ? err.message : String(err));
+            recalcAndRender();
+          })
+          .getSidebarInitialState();
+      } else {
+        recalcAndRender();
+      }
+    })();
+  </script>
+</body>
+</html>

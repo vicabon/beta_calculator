@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub 發布與上版前安全稽核報告（vicabon/beta_calculator）</title>
+  <style>
+    :root {
+      --bg: #0b1120; --surface: #111827; --card: #1e293b; --border: #334155;
+      --text: #f8fafc; --muted: #94a3b8; --blue: #3b82f6; --emerald: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: radial-gradient(circle at top right, #064e3b 0%, var(--bg) 45%);
+      color: var(--text); line-height: 1.6; padding: 28px 18px 64px;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border); border-radius: 18px; padding: 26px 28px; margin-bottom: 20px;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .badge {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid #10b98166; background: #05966926; color: #6ee7b7;
+    }
+    .badge.blue { border-color: #3b82f666; background: #1d4ed826; color: #93c5fd; }
+    .hero h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .hero p { color: var(--muted); font-size: 14px; }
+    section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px 24px; margin-bottom: 18px;
+    }
+    section h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid #1e293b; text-align: left; }
+    th { background: #1e293b; color: #cbd5e1; font-weight: 700; font-size: 12px; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+      background: #0f172a; border: 1px solid #334155; padding: 1px 6px; border-radius: 5px; color: #93c5fd;
+    }
+    ol, ul { padding-left: 20px; font-size: 13.5px; color: #e2e8f0; }
+    li { margin-bottom: 7px; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="badges">
+        <span class="badge">✅ 經使用者授權推送至 GitHub</span>
+        <span class="badge blue">🔒 私有倉庫 vicabon/beta_calculator (main)</span>
+        <span class="badge">🛡️ 46 / 46 AI 六層驗證全數通過</span>
+      </div>
+      <h1>🚀 GitHub 發布與上版前安全稽核報告</h1>
+      <p>
+        目標倉庫：<code>https://github.com/vicabon/beta_calculator.git</code>（分支 <code>main</code>）。上版前已完成密鑰與個資零洩漏檢查，並使用 GitHub Noreply 信箱提交以保護隱私。
+      </p>
+    </header>
+
+    <section>
+      <h2>一、上版前安全與品質稽核表</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>稽核項目</th><th>結果</th><th>詳情</th></tr></thead>
+          <tbody>
+            <tr><td>SSH 身分與私有倉存取</td><td>✅ PASS</td><td>驗證為 <code>vicabon</code>，成功存取 <code>vicabon/beta_calculator</code></td></tr>
+            <tr><td>密鑰與 API Key 零外洩</td><td>✅ PASS</td><td>所有 GAS 與 Web 模組 0 筆硬編碼金鑰或憑證</td></tr>
+            <tr><td>個人真實資產保護</td><td>✅ PASS</td><td>僅含預設範例假資料，<code>.gitignore</code> 已排除 <code>.env*</code> / <code>*.enc.json</code> / <code>*my_portfolio*</code></td></tr>
+            <tr><td>AI 六層驗證全數回歸</td><td>✅ PASS</td><td>網頁版 17/17 ＋ Google Drive 版 29/29 ＝ <strong>46/46 PASS</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、推送完成後上線 Cloudflare Pages（3 步驟）</h2>
+      <ol>
+        <li>登入 Cloudflare Dashboard → <strong>Workers &amp; Pages → Create → Pages → Connect to Git</strong>，僅授權單一私有倉 <code>vicabon/beta_calculator</code>。</li>
+        <li>設定輸出目錄 <code>web/public</code>（建置指令 <code>node web/scripts/sync_core.mjs</code>），建立免費 D1 資料庫 <code>betacalculator_db</code>、執行 <code>web/migrations/0001_init.sql</code> 並綁定為 <code>DB</code>。</li>
+        <li>依需求於 Cloudflare Secrets 加入免費 API 金鑰並啟用 <strong>Cloudflare Zero Trust Access（50 人免費登入牆）</strong>，即可於 iPhone / Android 加入主畫面使用！</li>
+      </ol>
+    </section>
+
+    <footer>
+      BetaCalculator · GitHub Release Audit Report · Generated 2026-11-27 (+08:00)
+    </footer>
+  </div>
+</body>
+</html>

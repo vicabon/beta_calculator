@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DWZ Beta">
+  <title>Die With Zero × Portfolio Beta × 多源股價校對</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>🔥 Die With Zero × Portfolio Beta</h1>
+        <p>對齊 alphalab.site/fire 設計 · 本機自動記憶 · 零知識加密同步 · 三源以上股價校對</p>
+      </div>
+      <div class="status-pills">
+        <span class="pill" id="topBetaPill">整體 Beta: --</span>
+        <span class="pill green" id="topSyncPill">💾 本機已自動保存</span>
+        <span class="pill blue" id="topAuthPill">🔒 本機私密模式</span>
+      </div>
+    </header>
+
+    <div id="iosPwaHint" class="ios-hint hidden" role="note">
+      <span>📱 <strong>iPhone 提示</strong>：建議點選 Safari「分享 → 加入主畫面」或啟用「🔐 私密同步」，可避開 Safari 7 天未開啟自動清除本機資料之機制，並享全螢幕 App 體驗。</span>
+      <button type="button" class="chip" id="btnDismissIosHint">知道了</button>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="主要功能導覽">
+      <button type="button" class="tab-btn active" data-tab="fire"><span class="tab-ico">🔥</span><span class="tab-txt">歸零試算</span></button>
+      <button type="button" class="tab-btn" data-tab="portfolio"><span class="tab-ico">💼</span><span class="tab-txt">持倉Beta</span></button>
+      <button type="button" class="tab-btn" data-tab="reconcile"><span class="tab-ico">🔍</span><span class="tab-txt">股價校對</span></button>
+      <button type="button" class="tab-btn" data-tab="vault"><span class="tab-ico">🔐</span><span class="tab-txt">私密同步</span></button>
+      <button type="button" class="tab-btn" data-tab="telemetry"><span class="tab-ico">🛡️</span><span class="tab-txt">系統監控</span></button>
+    </nav>
+
+    <div id="toastBar" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- TAB 1: DIE WITH ZERO CALCULATOR -->
+    <main id="tab-fire" class="tab-panel active">
+      <div class="split-grid">
+        <section class="panel-card">
+          <h2>1️⃣ 關於你（About You）</h2>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn active" id="statusWorkingBtn">還在工作</button>
+            <button type="button" class="toggle-btn" id="statusRetiredBtn">已經退休</button>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireAge">現在幾歲</label><input type="number" inputmode="numeric" id="fireAge" min="15" max="105" value="35"></div>
+            <input type="range" id="fireAgeRange" min="18" max="85" value="35">
+          </div>
+          <div class="field" id="fireRetireWrap">
+            <div class="field-head"><label for="fireRetireAge">想幾歲退休</label><input type="number" inputmode="numeric" id="fireRetireAge" min="18" max="105" value="55"></div>
+            <input type="range" id="fireRetireAgeRange" min="20" max="85" value="55">
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireLifeExp">預計活到幾歲</label><input type="number" inputmode="numeric" id="fireLifeExp" min="50" max="115" value="85"></div>
+            <input type="range" id="fireLifeExpRange" min="60" max="105" value="85">
+            <div class="quick-chips">
+              <span class="chip-hint">內政部生命表保守參考：</span>
+              <button type="button" class="chip" data-life="84">男保守 84歲</button>
+              <button type="button" class="chip" data-life="85">全體預設 85歲</button>
+              <button type="button" class="chip" data-life="89">女保守 89歲</button>
+            </div>
+          </div>
+
+          <h2 class="mt-lg">2️⃣ 資產與收支（今日實質幣值 TWD）</h2>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn active" id="nwLinkedBtn">自動連動持倉總市值</button>
+            <button type="button" class="toggle-btn" id="nwManualBtn">手動輸入淨資產</button>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireNetWorth">採用淨資產（TWD）</label><input type="number" inputmode="decimal" id="fireNetWorth" step="100000" value="5954750"></div>
+          </div>
+          <div class="field" id="fireSavingsWrap">
+            <div class="field-head"><label for="fireMonthlySavings">每月能存 / 投入（TWD）</label><input type="number" inputmode="decimal" id="fireMonthlySavings" step="5000" value="50000"></div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireMonthlySpending">退休後每月開銷（TWD）</label><input type="number" inputmode="decimal" id="fireMonthlySpending" step="5000" value="60000"></div>
+          </div>
+          <details class="optional-box">
+            <summary>選填進階：退休金 / 被動收入（AlphaLab 預設 0 最保守）</summary>
+            <div class="field mt-sm">
+              <div class="field-head"><label for="fireMonthlyPension">每月退休金 / 被動收入（TWD）</label><input type="number" inputmode="decimal" id="fireMonthlyPension" step="2000" value="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="firePensionAge">開始領取年齡（歲）</label><input type="number" inputmode="numeric" id="firePensionAge" min="40" max="90" value="65"></div>
+            </div>
+          </details>
+
+          <h2 class="mt-lg">3️⃣ 進階假設（Fisher 實質報酬換算）</h2>
+          <div class="field">
+            <div class="field-head"><label for="fireNominalReturn">預期年化投資報酬率 (%)</label><input type="number" inputmode="decimal" id="fireNominalReturn" step="0.1" value="7.0"></div>
+            <input type="range" id="fireNominalReturnRange" min="0" max="15" step="0.1" value="7.0">
+            <div class="quick-chips">
+              <span class="chip-hint" id="capmHint">依持倉 Beta 估算 CAPM 參考：--</span>
+              <button type="button" class="chip" id="applyCapmBtn">套用 CAPM 參考值</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireInflation">預期年通貨膨脹率 (%)</label><input type="number" inputmode="decimal" id="fireInflation" step="0.1" value="3.0"></div>
+            <input type="range" id="fireInflationRange" min="0" max="8" step="0.1" value="3.0">
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="fireSwr">傳統 FIRE 安全提領率 (%)</label><input type="number" inputmode="decimal" id="fireSwr" step="0.1" value="4.0"></div>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="section-head">
+            <h2>📊 Die With Zero vs 傳統 4% FIRE 試算結果</h2>
+            <span class="badge-mini" id="realReturnBadge">實質報酬：--</span>
+          </div>
+          <div id="fireDiagnosisBox" class="diag-banner">計算中...</div>
+
+          <div class="kpi-grid-2">
+            <div class="kpi-box emerald">
+              <div class="kpi-label">✨ 每月最高可花金額（歸零反推）</div>
+              <div class="kpi-val" id="kpiMaxMonthly">--</div>
+              <div class="kpi-sub">套用後於預期壽命終點精準歸零</div>
+            </div>
+            <div class="kpi-box blue">
+              <div class="kpi-label">🎯 DWZ 退休目標（退休當下）</div>
+              <div class="kpi-val" id="kpiDwzRetire">--</div>
+              <div class="kpi-sub" id="kpiDwzTodaySub">今日立刻退休需：--</div>
+            </div>
+            <div class="kpi-box amber">
+              <div class="kpi-label">🚀 最早可退休年齡（DWZ vs 4% FIRE）</div>
+              <div class="kpi-val" id="kpiEarliest">--</div>
+              <div class="kpi-sub" id="kpiYearsSaved">--</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">🏛️ 傳統 4% FIRE 目標 vs 預期終點結餘</div>
+              <div class="kpi-val" id="kpiEndBalance">--</div>
+              <div class="kpi-sub" id="kpiClassicFireSub">傳統 4% FIRE 門檻：--</div>
+            </div>
+          </div>
+
+          <div class="btn-row mt-md">
+            <button type="button" class="btn btn-emerald" id="btnApplyMaxSpend">✨ 一鍵套用此開銷（完美歸零）</button>
+            <button type="button" class="btn btn-blue" id="btnApplyEarliestAge">🚀 一鍵套用 DWZ 最早退休年齡</button>
+          </div>
+
+          <div class="chart-card mt-md">
+            <div class="chart-title">資產走勢模擬曲線（今日實質幣值 / TWD）</div>
+            <svg id="fireChartSvg" viewBox="0 0 640 250" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="legend">
+              <span><i class="dot blue"></i>實際路徑資產</span>
+              <span><i class="dot emerald"></i>Die With Zero 理想歸零曲線</span>
+              <span><i class="dot amber"></i>傳統 4% FIRE 目標線</span>
+            </div>
+          </div>
+
+          <details class="optional-box mt-md">
+            <summary>展開完整逐年資產模擬明細表（今日實質幣值 × 名目含通膨資產）</summary>
+            <div class="table-wrap mt-sm max-h-320">
+              <table>
+                <thead>
+                  <tr>
+                    <th>年齡</th>
+                    <th>階段</th>
+                    <th class="num">期初資產</th>
+                    <th class="num">實質收益</th>
+                    <th class="num">淨現金流</th>
+                    <th class="num">實際期末資產</th>
+                    <th class="num">理想歸零曲線</th>
+                    <th class="num">名目資產(含通膨)</th>
+                  </tr>
+                </thead>
+                <tbody id="trajectoryTbody"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <!-- TAB 2: PORTFOLIO & BETA -->
+    <main id="tab-portfolio" class="tab-panel">
+      <div class="kpi-grid-4">
+        <div class="kpi-box blue">
+          <div class="kpi-label">總資產市值 (TWD)</div>
+          <div class="kpi-val" id="portTotalVal">--</div>
+          <div class="kpi-sub" id="portCashSub">現金比例：--</div>
+        </div>
+        <div class="kpi-box emerald">
+          <div class="kpi-label">整體投資組合 Beta（含現金）</div>
+          <div class="kpi-val" id="portOverallBeta">--</div>
+          <div class="kpi-sub">加權計算：Σ(權重 × 採用Beta)</div>
+        </div>
+        <div class="kpi-box amber">
+          <div class="kpi-label">純股票部位 Beta（不含現金）</div>
+          <div class="kpi-val" id="portEquityBeta">--</div>
+          <div class="kpi-sub" id="portEquityValSub">純股票市值：--</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">等效大盤曝險 (Beta=1 市值)</div>
+          <div class="kpi-val" id="portExposure">--</div>
+          <div class="kpi-sub" id="portFxSub">USD/TWD 匯率：32.00</div>
+        </div>
+      </div>
+
+      <section class="panel-card mt-md">
+        <div class="section-head wrap">
+          <h2>💼 個人股票持倉與 Beta 明細（自動儲存至本機，不須重打）</h2>
+          <div class="btn-row">
+            <button type="button" class="btn btn-emerald" id="btnSyncLivePrices">🔄 同步今日四源股價並更新市值</button>
+            <button type="button" class="btn btn-outline" id="btnRefreshFx">💱 更新 USD/TWD 匯率</button>
+            <button type="button" class="btn btn-blue" id="btnAddHolding">＋ 新增持倉標的</button>
+            <button type="button" class="btn btn-outline" id="btnResetDummy">↺ 重置範例持倉</button>
+          </div>
+        </div>
+        <p class="muted-note">預設 Beta：<code>0050=1</code>、<code>006208=1</code>、<code>00662=1</code>、<code>00685L=2</code>、<code>00631L=2</code>、<code>CASH (現金Cash)=0</code>。任何自訂台/美股均可於「自訂覆寫 Beta」欄指定專屬值。</p>
+
+        <div class="table-wrap mt-sm">
+          <table class="holdings-table">
+            <thead>
+              <tr>
+                <th>股票代號</th>
+                <th>市場別</th>
+                <th>資產名稱</th>
+                <th class="num">持有股數 / 金額</th>
+                <th>幣別</th>
+                <th class="num">股價（共識價）</th>
+                <th class="num">市值 (TWD)</th>
+                <th class="num">權重</th>
+                <th class="num">預設 Beta</th>
+                <th class="num">自訂覆寫 Beta</th>
+                <th class="num">採用 Beta</th>
+                <th class="num">加權貢獻</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="split-grid mt-md">
+        <section class="panel-card">
+          <h2>📊 各標的資產權重 vs Beta 曝險貢獻</h2>
+          <div class="chart-card">
+            <svg id="betaBarSvg" viewBox="0 0 560 220" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <h2>⚡ 大盤波動壓力測試（依整體 Beta 推估）</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>情境</th>
+                  <th class="num">大盤漲跌</th>
+                  <th class="num">預估組合漲跌</th>
+                  <th class="num">預估損益 (TWD)</th>
+                  <th class="num">衝擊後淨資產</th>
+                </tr>
+              </thead>
+              <tbody id="stressTbody"></tbody>
+            </table>
+          </div>
+          <p class="muted-note mt-sm">⚠️ 正二槓桿型 ETF（00631L、00685L）為單日倍數追蹤，長期具波動耗損（Volatility Drag），壓力測試僅供線性情境參考。</p>
+        </section>
+      </div>
+    </main>
+
+    <!-- TAB 3: MULTI-SOURCE PRICE RECONCILIATION & HISTORICAL TRACKING -->
+    <main id="tab-reconcile" class="tab-panel">
+      <section class="panel-card">
+        <div class="section-head wrap">
+          <h2>🔍 一、今日 / 目前股價三源以上校對矩陣</h2>
+          <button type="button" class="btn btn-emerald" id="btnReconLiveNow">🔄 立即執行今日多源校對</button>
+        </div>
+        <p class="muted-note">並行呼叫 TWSE/TPEx（或美股 Stooq）、Yahoo Finance v8、FinMind，及選配之 Fugle 富果 / TwelveData / Google Finance (GAS 橋接)；採中位數共識價抗單源異常。</p>
+        <div class="table-wrap mt-sm">
+          <table>
+            <thead>
+              <tr>
+                <th>代號</th>
+                <th>市場</th>
+                <th>各權威來源報價明細</th>
+                <th class="num">有效來源</th>
+                <th class="num">共識價 (中位數)</th>
+                <th class="num">最大價差率</th>
+                <th>校對狀態</th>
+                <th>離群偵測</th>
+              </tr>
+            </thead>
+            <tbody id="liveReconTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel-card mt-md">
+        <div class="section-head wrap">
+          <h2>📅 二、指定歷史日期收盤價校對（優先命中 Cloudflare D1 永久快取）</h2>
+          <div class="inline-form">
+            <label for="histDateInput">目標日期：</label>
+            <input type="date" id="histDateInput">
+            <button type="button" class="btn btn-blue" id="btnReconHistDate">📅 校對全持倉歷史收盤</button>
+          </div>
+        </div>
+        <p class="muted-note">統一採「未還原收盤價 (Unadjusted Close)」比對防除權息誤報；通過三源精準驗證（價差 ≤ 0.1% 或 ≤ 0.05 元）後永久寫入 D1 快取。</p>
+        <div class="table-wrap mt-sm">
+          <table>
+            <thead>
+              <tr>
+                <th>代號</th>
+                <th>市場</th>
+                <th>交易日 / 快取</th>
+                <th>各來源未還原收盤價</th>
+                <th class="num">有效來源</th>
+                <th class="num">共識收盤價</th>
+                <th class="num">價差率</th>
+                <th>狀態</th>
+                <th>離群偵測</th>
+              </tr>
+            </thead>
+            <tbody id="histReconTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel-card mt-md">
+        <div class="section-head wrap">
+          <h2>📈 三、區間歷史股價追蹤與逐日三源比對</h2>
+          <div class="inline-form">
+            <input type="text" id="rangeTicker" value="0050" placeholder="代號" style="width:95px;">
+            <select id="rangeMarket">
+              <option value="TWSE">TWSE</option>
+              <option value="TPEX">TPEX</option>
+              <option value="US">US</option>
+            </select>
+            <input type="date" id="rangeStart">
+            <span>至</span>
+            <input type="date" id="rangeEnd">
+            <button type="button" class="btn btn-emerald" id="btnFetchRange">📈 開始區間追蹤</button>
+          </div>
+        </div>
+        <div class="chart-card mt-sm">
+          <svg id="historyChartSvg" viewBox="0 0 640 200" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="table-wrap mt-sm max-h-320">
+          <table>
+            <thead>
+              <tr>
+                <th>交易日期</th>
+                <th>代號</th>
+                <th>各來源收盤價</th>
+                <th class="num">有效來源</th>
+                <th class="num">共識價</th>
+                <th class="num">價差率</th>
+                <th>狀態</th>
+                <th>離群來源</th>
+              </tr>
+            </thead>
+            <tbody id="rangeTbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 4: PRIVATE ZERO-KNOWLEDGE SYNC & BACKUP -->
+    <main id="tab-vault" class="tab-panel">
+      <div class="split-grid">
+        <section class="panel-card">
+          <h2>☁️ 模式 1：Cloudflare Access ＋ D1 零知識加密保險庫（個人 / 親友 ≤50 人首選）</h2>
+          <p class="muted-note">透過 Cloudflare Zero Trust Access 登入驗證（50 人內永久 $0）隔離每人資料列；啟用前端 <strong>AES-256-GCM (PBKDF2 60萬次)</strong> 後，資料庫僅存密文，連平台與管理員都看不到明文。</p>
+          <div class="vault-status-box mt-sm" id="cfVaultStatus">偵測 Cloudflare Access 登入狀態中...</div>
+
+          <div class="field mt-md">
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkE2eeMode" checked>
+              <span>啟用端對端零知識加密（建議開啟，瀏覽器先加密再上傳 D1）</span>
+            </label>
+          </div>
+          <div class="field" id="e2eePassWrap">
+            <div class="field-head"><label for="vaultPassphrase">保險庫主密碼（至少 8 碼，永不傳送至伺服器）</label></div>
+            <input type="password" id="vaultPassphrase" class="full-input" placeholder="輸入主密碼以加解密雲端持倉">
+            <div class="quick-chips mt-sm">
+              <button type="button" class="chip" id="btnGenRecovery">🔑 產生 256-bit 備用金鑰</button>
+              <span class="chip-hint" id="recoveryKeyDisplay"></span>
+            </div>
+          </div>
+
+          <div class="btn-row mt-md">
+            <button type="button" class="btn btn-emerald" id="btnCfUpload">⬆️ 加密同步上傳至 D1</button>
+            <button type="button" class="btn btn-blue" id="btnCfDownload">⬇️ 從 D1 下載並解密</button>
+            <button type="button" class="btn btn-danger" id="btnCfDelete">🗑️ 清除雲端資料</button>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <h2>📁 模式 2：Google Drive <code>drive.appdata</code>（公開多人 BYOS 首選）</h2>
+          <p class="muted-note">資料直接存在<strong>你自己的 Google Drive 隱藏應用程式資料夾</strong>（非敏感權限，免 CASA 審核），開發者零個資保管責任、跨裝置免費同步。</p>
+          <div class="field mt-sm">
+            <div class="field-head"><label for="gdriveClientId">Google OAuth Client ID（公開部署由站方設定或自行填入）</label></div>
+            <input type="text" id="gdriveClientId" class="full-input" placeholder="xxxxx.apps.googleusercontent.com">
+          </div>
+          <div class="btn-row mt-sm">
+            <button type="button" class="btn btn-blue" id="btnGdriveUpload">☁️ 同步上傳至我的 Google Drive</button>
+            <button type="button" class="btn btn-outline" id="btnGdriveDownload">⬇️ 從我的 Google Drive 還原</button>
+          </div>
+
+          <h2 class="mt-lg">💾 模式 3：離線加密備份檔與 Google 試算表互通</h2>
+          <p class="muted-note">隨時將完整持倉與 DWZ 設定匯出成 AES-256 加密檔（<code>.enc.json</code>），或匯出安全 CSV 與現有 Google 試算表版雙向互通。</p>
+          <div class="btn-row mt-sm">
+            <button type="button" class="btn btn-emerald" id="btnExportEnc">🔒 匯出加密備份 (.enc.json)</button>
+            <label class="btn btn-outline file-label">🔓 匯入加密/JSON 備份<input type="file" id="fileImportBackup" accept=".json"></label>
+            <button type="button" class="btn btn-outline" id="btnExportCsv">📊 匯出持倉 CSV</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- TAB 5: TELEMETRY & 6-LAYER STATUS -->
+    <main id="tab-telemetry" class="tab-panel">
+      <section class="panel-card">
+        <div class="section-head wrap">
+          <h2>🛡️ 系統連線狀態、權威來源與 AI 六層驗證遙測（零個資匿名指標）</h2>
+          <button type="button" class="btn btn-blue" id="btnRefreshHealth">🔄 重新檢測系統健康度</button>
+        </div>
+        <div class="kpi-grid-4 mt-sm" id="healthKpiGrid">
+          <div class="kpi-box"><div class="kpi-label">API / D1 狀態</div><div class="kpi-val" id="hlthStatus">--</div></div>
+          <div class="kpi-box"><div class="kpi-label">D1 永久歷史快取筆數</div><div class="kpi-val" id="hlthCacheCount">--</div></div>
+          <div class="kpi-box"><div class="kpi-label">API 成功率 (SLA ≥98%)</div><div class="kpi-val" id="hlthSuccessRate">--</div></div>
+          <div class="kpi-box"><div class="kpi-label">API P95 延遲 / 快取命中率</div><div class="kpi-val" id="hlthP95">--</div></div>
+        </div>
+        <div class="mt-md">
+          <h3>已啟用權威股價來源檢核</h3>
+          <div id="sourcesBadgeList" class="status-pills mt-sm"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>⚠️ 免責聲明：本系統僅供個人財務規劃與多源股價核對，不構成投資建議。所有資產與退休試算 100% 於瀏覽器端運算，API 請求僅傳輸公開股票代號。</p>
+    </footer>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
